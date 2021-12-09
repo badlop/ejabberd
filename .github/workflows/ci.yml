@@ -178,39 +178,13 @@ jobs:
                       "payload":{"build_num":$GITHUB_RUN_ID,
                                  "status":"done"}}'
 
-    - name: Upload test and coverage results
-      if: always()
-      uses: actions/upload-artifact@v2
+    - name: Deploy test and coverage results to GitHub Pages
+      if: always() && (matrix.otp == 24)
+      uses: peaceiris/actions-gh-pages@v3
       with:
-        name: ejabberd-tests-sql-old-otp-${{matrix.otp}}
-        #
-        # Appending the wildcard character ("*") is a trick to make "test" the
-        # root directory of the uploaded ZIP file:
-        #
-        # https://github.com/actions/upload-artifact#upload-using-multiple-paths-and-exclusions
-        #
-        path: |
-          _build/test*/logs
-          _build/test*/cover
-
-  publish:
-    name: Publish test results
-    needs: [tests]
-    runs-on: ubuntu-latest
-    #if: ${{github.ref == 'refs/heads/master' && github.repository_owner == 'weiss'}}
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - name: Retrieve test and coverage results
-        uses: actions/download-artifact@v2
-        with:
-          name: ejabberd-tests-sql-old-otp-24
-          path: public
-      - name: Deploy test and coverage results to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          publish_dir: public/test
-          github_token: ${{secrets.GITHUB_TOKEN}}
+        publish_dir: _build/test/logs
+        destination_dir: logs
+        github_token: ${{secrets.GITHUB_TOKEN}}
 
   binaries:
     name: Binaries
