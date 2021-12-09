@@ -40,6 +40,8 @@ jobs:
     steps:
 
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 150
 
     - name: Get previous Erlang/OTP
       uses: ErlGang/setup-erlang@master
