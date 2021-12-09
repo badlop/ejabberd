@@ -112,8 +112,6 @@ jobs:
         LABEL="$GITHUB_REF_NAME-$COMMIT"
         echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL\"}]}." >>rebar.config
 
-    - run: tail rebar.config
-
     - name: Download previous test logs
       if: matrix.otp == 24
       run: |
@@ -121,9 +119,7 @@ jobs:
         curl -sSL https://github.com/badlop/ejabberd/tarball/gh-pages |
           tar -C _build/test --strip-components=1 --wildcards -xzf -
 
-    - run: ls -la
     - run: ls -la _build/test/
-    - run: ls -la _build/test/logs/
 
     - name: Compile
       run: |
@@ -160,7 +156,6 @@ jobs:
     - name: URL to view test results
       if: always() && (matrix.otp == 24)
       run: |
-        # https://badlop.github.io/ejabberd/logs/ct_run.nonode@nohost.2021-12-09_18.43.37/index.html
         CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
         echo "Result of this run: https://badlop.github.io/ejabberd/logs/$CTRUN/"
         echo "All runs: https://badlop.github.io/ejabberd/logs/all_runs.html"
