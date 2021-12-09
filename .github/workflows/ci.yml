@@ -127,6 +127,7 @@ jobs:
     - run: make hooks
     - run: make options
     - run: make xref
+    - run: make dialyzer
     - run: CT_BACKENDS=mnesia make test
 
     - name: Check results
