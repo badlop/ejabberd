@@ -79,6 +79,23 @@ jobs:
         sudo apt-get -qq install libexpat1-dev libgd-dev libpam0g-dev \
                                  libsqlite3-dev libwebp-dev libyaml-dev
 
+    - name: Cache rebar2
+      if: matrix.rebar == 2
+      uses: actions/cache@v2
+      with:
+        path: |
+          deps/
+          dialyzer/
+          ebin/
+        key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
+
+    - name: Cache rebar3
+      if: matrix.rebar == 3
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/rebar3/
+        key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
+
     - name: Prepare rebar
       id: rebar
       run: |
@@ -107,23 +124,6 @@ jobs:
     - run: ls -la
     - run: ls -la _build/test/
     - run: ls -la _build/test/logs/
-
-    - name: Cache rebar2
-      if: matrix.rebar == 2
-      uses: actions/cache@v2
-      with:
-        path: |
-          deps/
-          dialyzer/
-          ebin/
-        key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
-
-    - name: Cache rebar3
-      if: matrix.rebar == 3
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/rebar3/
-        key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
 
     - name: Compile
       run: |
