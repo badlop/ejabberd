@@ -195,7 +195,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         publish_dir: _build/test
-        exclude_assets: '.github,_build/test/lib,_build/test/plugins'
+        exclude_assets: '.github,lib,plugins'
         github_token: ${{secrets.GITHUB_TOKEN}}
 
     - name: URL to view test results
