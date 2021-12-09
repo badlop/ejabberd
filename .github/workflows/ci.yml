@@ -196,7 +196,8 @@ jobs:
       with:
         publish_dir: _build/test
         exclude_assets: '.github,lib,plugins'
-        github_token: ${{secrets.GITHUB_TOKEN}}
+        external_repository: badlop/ejtestlogs
+        deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
 
     - name: URL to view test results
       if: always() && (matrix.otp == 24)
