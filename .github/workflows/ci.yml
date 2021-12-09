@@ -140,6 +140,7 @@ jobs:
     - run: make xref
     - run: make dialyzer
     - run: CT_BACKENDS=mnesia make test
+    - run: rebar3 cover
 
     - name: Check results
       if: always()
@@ -152,13 +153,6 @@ jobs:
         grep 'TEST COMPLETE' logs/suite.log
         grep -q 'TEST COMPLETE,.* 0 failed' logs/suite.log
         test $(find logs/ -empty -name error.log)
-
-    - name: URL to view test results
-      if: always() && (matrix.otp == 24)
-      run: |
-        CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
-        echo "Result of this run: https://badlop.github.io/ejabberd/logs/$CTRUN/"
-        echo "All runs: https://badlop.github.io/ejabberd/logs/all_runs.html"
 
     - name: View dialyzer report
       run: cat logs/dialyzer.log
@@ -200,9 +194,17 @@ jobs:
       if: always() && (matrix.otp == 24)
       uses: peaceiris/actions-gh-pages@v3
       with:
-        publish_dir: _build/test/logs
-        destination_dir: logs
+        publish_dir: _build/test
+        exclude_assets: '.github,_build/test/lib,_build/test/plugins'
         github_token: ${{secrets.GITHUB_TOKEN}}
+
+    - name: URL to view test results
+      if: always() && (matrix.otp == 24)
+      run: |
+        CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
+        echo "This run: https://badlop.github.io/ejabberd/logs/$CTRUN/"
+        echo "All runs: https://badlop.github.io/ejabberd/logs/all_runs.html"
+        echo "Cover report: https://badlop.github.io/ejabberd/cover/"
 
   binaries:
     name: Binaries
