@@ -91,12 +91,13 @@ jobs:
               eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        echo '{ct_extra_params, "-verbosity 20"}.' >>rebar.config
         COMMIT=`echo $GITHUB_SHA | cut -c 1-8`
         LABEL="-label $GITHUB_REF_NAME-$COMMIT"
         echo '{ct_extra_params, "-verbosity 20 $LABEL"}.' >>rebar.config
 
-    - name: Download previous test results
+    - run: tail rebar.config
+
+    - name: Download previous test logs
       if: matrix.otp == 24
       run: |
         mkdir -p _build/test
@@ -198,7 +199,7 @@ jobs:
                       "payload":{"build_num":$GITHUB_RUN_ID,
                                  "status":"done"}}'
 
-    - name: Deploy test and coverage results to GitHub Pages
+    - name: Deploy test logs to GitHub Pages
       if: always() && (matrix.otp == 24)
       uses: peaceiris/actions-gh-pages@v3
       with:
