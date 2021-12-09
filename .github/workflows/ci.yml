@@ -98,6 +98,16 @@ jobs:
         COMMIT=`git describe --tags`
         echo '{ct_extra_params, "-verbosity 20 -label $BRANCH-$COMMIT"}.' >>rebar.config
 
+    - name: Retrieve test and coverage results
+      if: matrix.otp == 24
+      uses: actions/download-artifact@v2
+      with:
+        name: ejabberd-tests-otp-24
+        path: _build/test/
+
+    - run: ls -la
+    - run: ls -la _build/test/
+
     - name: Cache rebar2
       if: matrix.rebar == 2
       uses: actions/cache@v2
@@ -138,7 +148,7 @@ jobs:
     - name: Check results
       if: always()
       run: |
-        [[ -d _build ]] && ln -s _build/test/logs/ logs \
+        [[ -d _build ]] && ln -s _build/test/logs/last/ logs \
                         && ln `find _build/ -name "*dialyzer_warnings"` \
                               logs/dialyzer.log \
                         || ln dialyzer/error.log logs/dialyzer.log
@@ -146,6 +156,13 @@ jobs:
         grep 'TEST COMPLETE' logs/suite.log
         grep -q 'TEST COMPLETE,.* 0 failed' logs/suite.log
         test $(find logs/ -empty -name error.log)
+
+    - name: Upload test and coverage results
+      if: always() && (matrix.otp == 24)
+      uses: actions/upload-artifact@v2
+      with:
+        name: ejabberd-tests-otp-${{matrix.otp}}
+        path: _build/test/logs
 
     - name: View dialyzer report
       run: cat logs/dialyzer.log
