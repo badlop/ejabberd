@@ -92,6 +92,9 @@ jobs:
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
         echo '{ct_extra_params, "-verbosity 20"}.' >>rebar.config
+        BRANCH=`git rev-parse --abbrev-ref HEAD`
+        COMMIT=`git describe --tags`
+        echo '{ct_extra_params, "-verbosity 20 -label $BRANCH-$COMMIT"}.' >>rebar.config
 
     - name: Cache rebar2
       if: matrix.rebar == 2
