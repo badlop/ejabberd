@@ -112,7 +112,7 @@ jobs:
         LABEL2=`git show-branch --no-name HEAD`
         LABEL3=`git log -1 --pretty=%B`
         LABEL4=`git log --pretty='format:%Creset%s' --no-merges -1`
-        LABEL5=${{ github.event.head_commit.message }}
+        LABEL5="${{ github.event.head_commit.message }}"
         echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL\"}, {label2, \"LABEL2\"}, {label3, \"LABEL3\"}, {label4, \"LABEL4\"}, {label5, \"LABEL5\"}]}." >>rebar.config
 
     - run: tail rebar.config
