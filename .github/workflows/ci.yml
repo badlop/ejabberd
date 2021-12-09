@@ -144,8 +144,9 @@ jobs:
       run: |
         cd priv && ln -sf ../sql
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
-        NODENAME=$COMMIT@$GITHUB_REF_NAME
-        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
+        NODENAME1=$COMMIT@$GITHUB_REF_NAME
+        echo "The node name is: $NODENAME1."
+        CT_BACKENDS=mnesia rebar3 ct --name $COMMIT@$GITHUB_REF_NAME
     - run: rebar3 cover
 
     - name: Check results
