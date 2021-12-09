@@ -131,7 +131,7 @@ jobs:
     - run: make options
     - run: make xref
     - run: make dialyzer
-    - run: make test
+    - run: CT_BACKENDS=mnesia make test
 
     - name: Check results
       if: always()
