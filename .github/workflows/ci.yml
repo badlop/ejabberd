@@ -91,9 +91,9 @@ jobs:
               eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        COMMIT=`echo $GITHUB_SHA | cut -c 1-8`
+        COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
         LABEL="$GITHUB_REF_NAME-$COMMIT"
-        echo "{ct_opts, [{verbosity, 20}, {label, \"$LABEL\"}}." >>rebar.config
+        echo "{ct_opts, [{verbosity, 20}, {label, \"$LABEL\"}]}." >>rebar.config
 
     - run: tail rebar.config
 
