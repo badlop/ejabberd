@@ -203,6 +203,6 @@ jobs:
       if: always() && (matrix.otp == 24)
       run: |
         CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
-        echo "This run: https://badlop.github.io/ejabberd/logs/$CTRUN/"
-        echo "All runs: https://badlop.github.io/ejabberd/logs/all_runs.html"
-        echo "Cover report: https://badlop.github.io/ejabberd/cover/"
+        echo "This run: https://badlop.github.io/ejtestlogs/logs/$CTRUN/"
+        echo "All runs: https://badlop.github.io/ejtestlogs/logs/all_runs.html"
+        echo "Cover report: https://badlop.github.io/ejtestlogs/cover/"
