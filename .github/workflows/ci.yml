@@ -40,8 +40,6 @@ jobs:
     steps:
 
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 150
 
     - name: Get previous Erlang/OTP
       uses: ErlGang/setup-erlang@master
@@ -94,9 +92,9 @@ jobs:
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
         echo '{ct_extra_params, "-verbosity 20"}.' >>rebar.config
-        BRANCH=`git rev-parse --abbrev-ref HEAD`
-        COMMIT=`git describe --tags`
-        echo '{ct_extra_params, "-verbosity 20 -label $BRANCH-$COMMIT"}.' >>rebar.config
+        COMMIT=`echo $GITHUB_SHA | cut -c 1-8`
+        LABEL="-label $GITHUB_REF_NAME-$COMMIT"
+        echo '{ct_extra_params, "-verbosity 20 $LABEL"}.' >>rebar.config
 
     - name: Retrieve test and coverage results
       if: matrix.otp == 24
