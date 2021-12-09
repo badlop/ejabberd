@@ -25,11 +25,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        otp: ['19.3', '24']
+        otp: ['24']
         include:
-        - otp: '19.3'
-          rebar: 2
-          os: ubuntu-18.04
         - otp: '24'
           rebar: 3
           os: ubuntu-20.04
