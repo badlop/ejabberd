@@ -106,6 +106,7 @@ jobs:
 
     - run: ls -la
     - run: ls -la _build/test/
+    - run: ls -la _build/test/logs/
 
     - name: Cache rebar2
       if: matrix.rebar == 2
@@ -162,6 +163,14 @@ jobs:
       with:
         name: ejabberd-tests-otp-${{matrix.otp}}
         path: _build/test/logs
+
+    - name: URL to view test results
+      if: always() && (matrix.otp == 24)
+      run: |
+        # https://badlop.github.io/ejabberd/logs/ct_run.nonode@nohost.2021-12-09_18.43.37/index.html
+        CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
+        echo "Result of this run: https://badlop.github.io/ejabberd/logs/$CTRUN/"
+        echo "All runs: https://badlop.github.io/ejabberd/logs/all_runs.html"
 
     - name: View dialyzer report
       run: cat logs/dialyzer.log
