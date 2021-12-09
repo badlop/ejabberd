@@ -96,12 +96,12 @@ jobs:
         LABEL="-label $GITHUB_REF_NAME-$COMMIT"
         echo '{ct_extra_params, "-verbosity 20 $LABEL"}.' >>rebar.config
 
-    - name: Retrieve test and coverage results
+    - name: Download previous test results
       if: matrix.otp == 24
-      uses: actions/download-artifact@v2
-      with:
-        name: ejabberd-tests-otp-24
-        path: _build/test/
+      run: |
+        mkdir -p _build/test
+        curl -sSL https://github.com/badlop/ejabberd/tarball/gh-pages |
+          tar -C _build/test --strip-components=1 --wildcards -xzf - '*/logs/'
 
     - run: ls -la
     - run: ls -la _build/test/
