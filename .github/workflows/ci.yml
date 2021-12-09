@@ -108,9 +108,14 @@ jobs:
               eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
-        LABEL="$GITHUB_REF_NAME-$COMMIT"
-        echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL\"}]}." >>rebar.config
+        LABEL=`git show -s --format=%s`
+        LABEL2=`git show-branch --no-name HEAD`
+        LABEL3=`git log -1 --pretty=%B`
+        LABEL4=`git log --pretty='format:%Creset%s' --no-merges -1`
+        LABEL5=${{ github.event.head_commit.message }}
+        echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL\"}, {label2, \"LABEL2\"}, {label3, \"LABEL3\"}, {label4, \"LABEL4\"}, {label5, \"LABEL5\"}]}." >>rebar.config
+
+    - run: tail rebar.config
 
     - name: Download previous test logs
       if: matrix.otp == 24
@@ -139,7 +144,12 @@ jobs:
     - run: make options
     - run: make xref
     - run: make dialyzer
-    - run: CT_BACKENDS=mnesia make test
+    - name: Run tests
+      run: |
+        cd priv && ln -sf ../sql
+        COMMIT = `echo $GITHUB_SHA | cut -c 1-7`
+        NODENAME = $COMMIT@$GITHUB_REF_NAME
+        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
     - run: rebar3 cover
 
     - name: Check results
