@@ -101,7 +101,7 @@ jobs:
       run: |
         mkdir -p _build/test
         curl -sSL https://github.com/badlop/ejabberd/tarball/gh-pages |
-          tar -C _build/test --strip-components=1 --wildcards -xzf - '*/logs/'
+          tar -C _build/test --strip-components=1 --wildcards -xzf -
 
     - run: ls -la
     - run: ls -la _build/test/
