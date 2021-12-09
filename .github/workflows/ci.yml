@@ -147,8 +147,8 @@ jobs:
     - name: Run tests
       run: |
         cd priv && ln -sf ../sql
-        COMMIT = `echo $GITHUB_SHA | cut -c 1-7`
-        NODENAME = $COMMIT@$GITHUB_REF_NAME
+        COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
+        NODENAME=$COMMIT@$GITHUB_REF_NAME
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
     - run: rebar3 cover
 
