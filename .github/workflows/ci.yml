@@ -115,6 +115,7 @@ jobs:
 
     - name: Download previous test logs
       if: matrix.otp == 24
+      continue-on-error: true
       run: |
         mkdir -p _build/test
         curl -sSL https://github.com/badlop/ejtestlogs/tarball/gh-pages |
