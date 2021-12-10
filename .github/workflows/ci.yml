@@ -217,7 +217,13 @@ jobs:
         echo "All runs: https://badlop.github.io/ejtestlogs/logs/all_runs.html"
         echo "Cover report: https://badlop.github.io/ejtestlogs/cover/"
 
-    - run: echo '::notice:: Missing semicolon'
+    - name: disable workflow commands
+      run: |
+        echo '::warning:: this is a warning'
+        echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+        echo '::warning:: this will NOT be a warning'
+        echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
+        echo '::warning:: this is a warning again'
 
     - name: disable workflow commands
       run: |
