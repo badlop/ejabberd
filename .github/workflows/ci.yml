@@ -214,6 +214,6 @@ jobs:
       if: always() && (matrix.otp == 24) && (github.repository == 'badlop/ejabberd')
       run: |
         CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
-        echo "This run: https://badlop.github.io/ejtestlogs/logs/$CTRUN/"
-        echo "All runs: https://badlop.github.io/ejtestlogs/logs/all_runs.html"
         echo "Cover report: https://badlop.github.io/ejtestlogs/cover/"
+        echo "This run: https://badlop.github.io/ejtestlogs/logs/$CTRUN/"
+        echo '::notice::View Common Test results: https://badlop.github.io/ejtestlogs/logs/all_runs.html'
