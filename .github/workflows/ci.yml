@@ -96,6 +96,15 @@ jobs:
         path: ~/.cache/rebar3/
         key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
 
+    - run: echo $GITHUB_ACTOR
+      continue-on-error: true
+
+    - run: echo ${{ github.actor }}
+      continue-on-error: true
+
+    - run: echo ${{ github.event.head_commit.author.name }}
+      continue-on-error: true
+
     - name: Prepare rebar
       id: rebar
       run: |
@@ -152,11 +161,6 @@ jobs:
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
 
-    - run: ls -la _build
-    - run: ls -la _build/test
-    - run: ls -la _build/test/logs
-    - run: ls -la _build/test/logs/last
-
     - name: Check results
       if: always()
       run: |
@@ -164,10 +168,6 @@ jobs:
                         && ln `find _build/ -name "*dialyzer_warnings"` \
                               logs/dialyzer.log \
                         || ln dialyzer/error.log logs/dialyzer.log
-
-    - run: ls -la logs
-    - run: ls -la logs/
-    - run: find logs/ -name suite.log
 
     - name: Check results
       if: always()
