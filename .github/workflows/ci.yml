@@ -152,10 +152,10 @@ jobs:
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
 
-    - name: ls -la _build
-    - name: ls -la _build/test
-    - name: ls -la _build/test/logs
-    - name: ls -la _build/test/logs/last
+    - run: ls -la _build
+    - run: ls -la _build/test
+    - run: ls -la _build/test/logs
+    - run: ls -la _build/test/logs/last
 
     - name: Check results
       if: always()
@@ -165,9 +165,9 @@ jobs:
                               logs/dialyzer.log \
                         || ln dialyzer/error.log logs/dialyzer.log
 
-    - name: ls -la logs
-    - name: ls -la logs/
-    - name: find logs/ -name suite.log
+    - run: ls -la logs
+    - run: ls -la logs/
+    - run: find logs/ -name suite.log
 
     - name: Check results
       if: always()
