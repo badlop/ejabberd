@@ -108,7 +108,7 @@ jobs:
               eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        LABEL=`git show -s --format=%s`
+        LABEL=`git show -s --format=%s | cut -c 1-30`
         echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL\"}]}." >>rebar.config
 
     - run: tail rebar.config
