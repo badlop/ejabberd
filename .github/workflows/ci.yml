@@ -207,6 +207,7 @@ jobs:
         exclude_assets: '.github,lib,plugins'
         external_repository: badlop/ejtestlogs
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+        keep_files: true
 
     - name: View links to Github Pages
       if: always() && (matrix.otp == 24)
