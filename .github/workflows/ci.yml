@@ -79,6 +79,20 @@ jobs:
         sudo apt-get -qq install libexpat1-dev libgd-dev libpam0g-dev \
                                  libsqlite3-dev libwebp-dev libyaml-dev
 
+    - name: Prepare rebar
+      id: rebar
+      run: |
+        echo '{xref_ignores, [{eldap_filter_yecc, return_error, 2}
+                             ]}.' >>rebar.config
+        echo '{xref_checks, [deprecated_function_calls, deprecated_functions,
+              locals_not_used, undefined_function_calls, undefined_functions]}.
+              % Disabled: exports_not_used,' >>rebar.config
+        echo '{dialyzer, [{get_warnings, true}, {plt_extra_apps, [cache_tab,
+              eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
+              mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
+              sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
+        echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}]}." >>rebar.config
+
     - name: Cache rebar2
       if: matrix.rebar == 2
       uses: actions/cache@v2
@@ -95,21 +109,6 @@ jobs:
       with:
         path: ~/.cache/rebar3/
         key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
-
-    - name: Prepare rebar
-      id: rebar
-      run: |
-        echo '{xref_ignores, [{eldap_filter_yecc, return_error, 2}
-                             ]}.' >>rebar.config
-        echo '{xref_checks, [deprecated_function_calls, deprecated_functions,
-              locals_not_used, undefined_function_calls, undefined_functions]}.
-              % Disabled: exports_not_used,' >>rebar.config
-        echo '{dialyzer, [{get_warnings, true}, {plt_extra_apps, [cache_tab,
-              eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
-              mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
-              sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        LABEL=`git show -s --format=%s | cut -c 1-30`
-        echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL...\"}]}." >>rebar.config
 
     - name: Download previous test logs
       if: matrix.otp == 24
@@ -148,7 +147,8 @@ jobs:
         (cd priv && ln -sf ../sql)
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
         NODENAME=$GITHUB_RUN_NUMBER@${{ github.actor }}#$GITHUB_REF_NAME#$COMMIT
-        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
+        LABEL=`git show -s --format=%s | cut -c 1-30`
+        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME --label "$LABEL...\"
         rebar3 cover
 
     - name: Check results
