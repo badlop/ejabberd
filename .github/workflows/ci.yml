@@ -141,13 +141,19 @@ jobs:
     - run: make options
     - run: make xref
     - run: make dialyzer
-    - name: Run tests
+
+    - name: Run tests with rebar2
+      if: matrix.otp != 24
+      run: |
+        make test
+    - name: Run tests with rebar3
+      if: matrix.otp == 24
       run: |
         (cd priv && ln -sf ../sql)
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
         NODENAME=$COMMIT@$GITHUB_REF_NAME
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
-    - run: rebar3 cover
+        rebar3 cover
 
     - name: Check results
       if: always()
