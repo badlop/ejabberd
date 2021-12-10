@@ -151,7 +151,7 @@ jobs:
       run: |
         (cd priv && ln -sf ../sql)
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
-        NODENAME=$COMMIT@$GITHUB_REF_NAME
+        NODENAME=${{ github.actor }}@$GITHUB_REF_NAME#$COMMIT
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
 
