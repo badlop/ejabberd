@@ -148,7 +148,7 @@ jobs:
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
         NODENAME=$GITHUB_RUN_NUMBER@${{ github.actor }}#$GITHUB_REF_NAME#$COMMIT
         LABEL=`git show -s --format=%s | cut -c 1-30`
-        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME --label "$LABEL...\"
+        CT_BACKENDS=mnesia rebar3 ct --name $NODENAME --label "$LABEL..."
         rebar3 cover
 
     - name: Check results
