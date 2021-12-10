@@ -152,6 +152,11 @@ jobs:
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
 
+    - name: ls -la _build
+    - name: ls -la _build/test
+    - name: ls -la _build/test/logs
+    - name: ls -la _build/test/logs/last
+
     - name: Check results
       if: always()
       run: |
@@ -159,7 +164,19 @@ jobs:
                         && ln `find _build/ -name "*dialyzer_warnings"` \
                               logs/dialyzer.log \
                         || ln dialyzer/error.log logs/dialyzer.log
+
+    - name: ls -la logs
+    - name: ls -la logs/
+    - name: find logs/ -name suite.log
+
+    - name: Check results
+      if: always()
+      run: |
         ln `find logs/ -name suite.log` logs/suite.log
+
+    - name: Check results
+      if: always()
+      run: |
         grep 'TEST COMPLETE' logs/suite.log
         grep -q 'TEST COMPLETE,.* 0 failed' logs/suite.log
         test $(find logs/ -empty -name error.log)
