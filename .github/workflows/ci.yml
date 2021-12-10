@@ -216,3 +216,11 @@ jobs:
         echo "This run: https://badlop.github.io/ejtestlogs/logs/$CTRUN/"
         echo "All runs: https://badlop.github.io/ejtestlogs/logs/all_runs.html"
         echo "Cover report: https://badlop.github.io/ejtestlogs/cover/"
+
+    - run: echo "::notice:: Missing semicolon"
+
+    - name: disable workflow commands
+      run: |
+        echo '::notice:: this is a notice'
+        echo '::warning:: this is a warning'
+        echo '::warning:: Cover report: https://badlop.github.io/ejtestlogs/cover/'
