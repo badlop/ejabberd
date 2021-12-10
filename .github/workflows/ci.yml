@@ -120,7 +120,6 @@ jobs:
           tar -C _build/test --strip-components=1 --wildcards -xzf -
         rm -rf _build/test/logs/last/
         find _build/test -name dialyzer.log -exec rm '{}' ';'
-        find _build/test -name suite.log -exec rm '{}' ';'
 
     - name: Compile
       run: |
@@ -154,6 +153,12 @@ jobs:
         NODENAME=$GITHUB_RUN_ID@${{ github.actor }}#$GITHUB_REF_NAME#$COMMIT
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
+
+    - run: echo "workflow: $GITHUB_WORKFLOW"
+    - run: echo "runid: $GITHUB_RUN_ID"
+    - run: echo "runnumber: $GITHUB_RUN_NUMBER"
+    - run: echo "job: $GITHUB_JOB"
+    - run: echo "action: $GITHUB_ACTION"
 
     - run: ls -la _build
     - run: ls -la _build/test
