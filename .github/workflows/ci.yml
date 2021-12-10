@@ -110,6 +110,10 @@ jobs:
         path: ~/.cache/rebar3/
         key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
 
+    - run: echo $GITHUB_REPOSITORY
+    - run: echo ${{ github.repository }}
+    - run: echo ${{ github.repository_owner }}
+
     - name: Download previous test logs
       if: matrix.otp == 24
       continue-on-error: true
