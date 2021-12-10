@@ -111,8 +111,6 @@ jobs:
         LABEL=`git show -s --format=%s | cut -c 1-30`
         echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL...\"}]}." >>rebar.config
 
-    - run: tail rebar.config
-
     - name: Download previous test logs
       if: matrix.otp == 24
       continue-on-error: true
@@ -121,8 +119,6 @@ jobs:
         curl -sSL https://github.com/badlop/ejtestlogs/tarball/gh-pages |
           tar -C _build/test --strip-components=1 --wildcards -xzf -
         find _build/test -name dialyzer.log -exec rm '{}' ';'
-
-    - run: ls -la _build/test/
 
     - name: Compile
       run: |
@@ -204,7 +200,7 @@ jobs:
                       "payload":{"build_num":$GITHUB_RUN_ID,
                                  "status":"done"}}'
 
-    - name: Deploy test logs to GitHub Pages
+    - name: Upload test logs to GitHub Pages
       if: always() && (matrix.otp == 24)
       uses: peaceiris/actions-gh-pages@v3
       with:
@@ -213,7 +209,7 @@ jobs:
         external_repository: badlop/ejtestlogs
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
 
-    - name: URL to view test results
+    - name: View links to Github Pages
       if: always() && (matrix.otp == 24)
       run: |
         CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
