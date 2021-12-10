@@ -120,6 +120,7 @@ jobs:
         mkdir -p _build/test
         curl -sSL https://github.com/badlop/ejtestlogs/tarball/gh-pages |
           tar -C _build/test --strip-components=1 --wildcards -xzf -
+        find _build/test -name dialyzer.log -exec rm '{}' ';'
 
     - run: ls -la _build/test/
 
