@@ -154,7 +154,7 @@ jobs:
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
 
-    - run: echo "workflow: $GITHUB_WORKFLOW"
+    - run: echo $GITHUB_WORKFLOW
     - run: echo "runid: $GITHUB_RUN_ID"
     - run: echo "runnumber: $GITHUB_RUN_NUMBER"
     - run: echo "job: $GITHUB_JOB"
