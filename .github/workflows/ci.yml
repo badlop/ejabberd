@@ -201,7 +201,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         publish_dir: _build/test
-        exclude_assets: '.github,lib,plugins'
+        exclude_assets: '.github,lib,plugins,logs/last/dialyzer.log'
         external_repository: badlop/ejtestlogs
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
 
