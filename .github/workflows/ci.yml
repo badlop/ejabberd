@@ -108,10 +108,7 @@ jobs:
               eimp, epam, esip, ezlib, fast_tls, fast_xml, fast_yaml,
               mqtree, p1_acme, p1_mysql, p1_oauth2, p1_pgsql, p1_utils, pkix,
               sqlite3, stringprep, stun, xmpp, yconf]} ]}.' >>rebar.config
-        # Full author name: ${{ github.event.head_commit.author.name }}
-        AUTHOR=${{ github.actor }}
-        MESSAGE=`git show -s --format=%s | cut -c 1-30`
-        LABEL="$AUTHOR: $MESSAGE"
+        LABEL=`git show -s --format=%s | cut -c 1-30`
         echo "{ct_opts, [{verbosity, 20}, {keep_logs, 20}, {label, \"$LABEL...\"}]}." >>rebar.config
 
     - name: Download previous test logs
@@ -122,6 +119,7 @@ jobs:
         curl -sSL https://github.com/badlop/ejtestlogs/tarball/gh-pages |
           tar -C _build/test --strip-components=1 --wildcards -xzf -
         find _build/test -name dialyzer.log -exec rm '{}' ';'
+        find _build/test -name suite.log -exec rm '{}' ';'
 
     - name: Compile
       run: |
@@ -151,6 +149,7 @@ jobs:
       run: |
         (cd priv && ln -sf ../sql)
         COMMIT=`echo $GITHUB_SHA | cut -c 1-7`
+        # Full author name: ${{ github.event.head_commit.author.name }}
         NODENAME=${{ github.actor }}@$GITHUB_REF_NAME#$COMMIT
         CT_BACKENDS=mnesia rebar3 ct --name $NODENAME
         rebar3 cover
