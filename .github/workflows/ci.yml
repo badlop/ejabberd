@@ -117,7 +117,7 @@ jobs:
       if: matrix.otp == 24
       run: |
         mkdir -p _build/test
-        curl -sSL https://github.com/badlop/ejabberd/tarball/gh-pages |
+        curl -sSL https://github.com/badlop/ejtestlogs/tarball/gh-pages |
           tar -C _build/test --strip-components=1 --wildcards -xzf -
 
     - run: ls -la _build/test/
