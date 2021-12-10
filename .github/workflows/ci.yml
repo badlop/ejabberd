@@ -111,7 +111,7 @@ jobs:
         key: ${{matrix.otp}}-${{matrix.rebar}}-${{hashFiles('rebar.config')}}
 
     - name: Download previous test logs
-      if: (matrix.otp == 24) && (github.repository == badlop/ejabberd)
+      if: (matrix.otp == 24) && (github.repository == 'badlop/ejabberd')
       continue-on-error: true
       run: |
         mkdir -p _build/test
@@ -200,7 +200,7 @@ jobs:
                                  "status":"done"}}'
 
     - name: Upload test logs to GitHub Pages
-      if: always() && (matrix.otp == 24) && (github.repository == badlop/ejabberd)
+      if: always() && (matrix.otp == 24) && (github.repository == 'badlop/ejabberd')
       uses: peaceiris/actions-gh-pages@v3
       with:
         publish_dir: _build/test
@@ -210,7 +210,7 @@ jobs:
         keep_files: true
 
     - name: View links to Github Pages
-      if: always() && (matrix.otp == 24) && (github.repository == badlop/ejabberd)
+      if: always() && (matrix.otp == 24) && (github.repository == 'badlop/ejabberd')
       run: |
         CTRUN=`ls -la _build/test/logs/last | sed 's|.*-> ||'`
         echo "This run: https://badlop.github.io/ejtestlogs/logs/$CTRUN/"
