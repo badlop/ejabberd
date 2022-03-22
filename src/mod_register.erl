@@ -163,9 +163,12 @@ process_iq(#iq{type = set, lang = Lang, to = To, from = From,
 	    end;
        true ->
 	    case From of
-		#jid{luser = LUser, lserver = Server} ->
+		#jid{luser = LUser, lserver = Server, lresource = LResource} ->
 		    ResIQ = xmpp:make_iq_result(IQ),
 		    ejabberd_router:route(xmpp:set_from_to(ResIQ, From, From)),
+		    Err = xmpp:serr_not_authorized(),
+		    Pid = ejabberd_sm:get_session_pid(LUser, Server, LResource),
+		    ejabberd_c2s:send(Pid, Err),
 		    ejabberd_auth:remove_user(LUser, Server),
 		    ignore;
 		_ ->
