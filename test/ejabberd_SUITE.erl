@@ -659,7 +659,7 @@ try_unregister(Config) ->
           Config,
           #iq{type = set,
               sub_els = [#register{remove = true}]}),
-    ?recv1(#stream_error{reason = conflict}),
+    ?recv1(#stream_error{reason = 'not-authorized'}),
     Config.
 
 unauthenticated_presence(Config) ->
