@@ -169,10 +169,8 @@ create_setup_script()
 	then useradd -r -d '$data_path' '$rel_name'
 	fi
 
-	host=\$(hostname --fqdn 2>'/dev/null' || :)
-	if [ -z "\$host" ]
-	then host='localhost'
-	fi
+	hostname=\$(hostname --fqdn 2>'/dev/null' || echo "localhost")
+	host=\${XMPPHOST:-\$hostname}
 
 	tar --skip-old-files -C "\$(dirname '$code_path')" -xf '$tarball'
 	chown -R -h 'root:root' '$code_path'
