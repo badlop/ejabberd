@@ -422,6 +422,54 @@ DEV_CONFIG = _build/dev/rel/ejabberd/conf/ejabberd.yml
 dev $(DEV_CONFIG):
 	$(REBARDEV)
 
+#version = $(shell git describe --tags | sed -e 's/-g.*//' -e 's/-/./' | tr -d '[:space:]')
+#version = 21.12
+version = 3781new1
+
+dbuildp:
+	podman build \
+	    	--build-arg VERSION=$(version) \
+	    	-t ja:$(version) .github/container
+
+dupp:
+	podman run --name ejabberd -it -p 5222:5222 localhost/ja:3781new1
+
+dshp:
+	podman exec -it ejabberd sh
+
+dbuild:
+	docker build \
+	    	--build-arg VERSION=$(version) \
+	    	-t badlop/eja:$(version) .github/container
+	docker tag badlop/eja:$(version) badlop/eja:latest
+
+dbuildx:
+	docker buildx build \
+                --platform=linux/amd64 \
+	    	--build-arg VERSION=$(version) \
+	    	-t badlop/eja:$(version) \
+		.github/container/Dockerfile
+	docker tag badlop/eja:$(version) badlop/eja:latest
+
+dup:
+	docker run --name ejabberd -it -p 5222:5222 badlop/eja:latest
+
+dupecs:
+	docker run --name ejabberd -it -p 5222:5222 ejabberd/ecs:21.12
+
+dupgh:
+	docker run --name ejabberd -it -p 5222:5222 ghcr.io/badlop/ejabberd:3781new1
+
+dupcompose:
+	docker-compose -f .github/container/docker-compose.yml up
+
+dsh:
+	docker exec -it  ejabberd sh
+
+dclean:
+	docker container prune -f
+	docker volume prune -f
+
 TAGS:
 	etags *.erl
 
@@ -498,6 +546,12 @@ help:
 	@echo "  rel            Build a production release"
 	@echo "  dev            Build a development release"
 	@echo "  relive         Start a live ejabberd in _build/relive/"
+	@echo ""
+	@echo "  dbuild         Build a Docker image"
+	@echo "  dbuildx        Build a Docker image using buildx"
+	@echo "  dup            Create and start a Docker container"
+	@echo "  dsh            "
+	@echo "  dclean         Stop and delete a Docker container"
 	@echo ""
 	@echo "  edoc           Generate edoc documentation (unused)"
 	@echo "  options        Generate ejabberd_option.erl"
