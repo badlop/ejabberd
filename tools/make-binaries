@@ -330,8 +330,7 @@ create_data_dir()
 	local data_dir="$2"
 
 	mkdir "$data_dir" "$data_dir/database" "$data_dir/logs"
-	mv "$code_dir/etc/ejabberd" "$data_dir/conf"
-	rmdir "$code_dir/etc"
+	mv "$code_dir/conf" "$data_dir/conf"
 	chmod 'o-rwx' "$data_dir/"*
 	curl -o "$data_dir/conf/cacert.pem" 'https://curl.se/ca/cacert.pem'
 	sed -i '/^loglevel:/a\
@@ -391,9 +390,7 @@ edit_ejabberdctl()
 	    -e "2iexport TERM='internal'" \
 	    -e '/ERL_OPTIONS=/d' \
 	    -e 's|^ERLANG_NODE=ejabberd$|ERLANG_NODE=ejabberd@localhost|' \
-	    -e 's|:=".*/etc/ejabberd"|:=/opt/ejabberd/conf|' \
-	    -e 's|:=".*/var/log/ejabberd"|:=/opt/ejabberd/logs|' \
-	    -e 's|:=".*/var/lib/ejabberd"|:=/opt/ejabberd/database|' \
+	    -e 's|_DIR:=".*}/|_DIR:="/opt/ejabberd/|' \
 	    "$code_dir/bin/${rel_name}ctl"
 }
 #.
@@ -426,9 +423,6 @@ remove_unused_files()
 	# Remove unused Mix stuff:
 	find "$code_dir/bin" -name 'ejabberd' -delete
 	find "$code_dir/releases" -name 'COOKIE' -delete
-
-	# Remove unused "var" tree:
-	find "$code_dir/var" -type d -delete
 }
 #.
 
