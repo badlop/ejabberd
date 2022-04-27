@@ -1,4 +1,4 @@
-name: Publish binary packages
+name: Installers
 
 on:
   push:
