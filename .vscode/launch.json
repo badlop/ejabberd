@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DEV",
+            "type": "erlang",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "arguments": "-sname ejabberd@localhost +K true +P 250000 -s ejabberd -ejabberd config \\\"_build/dev/rel/ejabberd/conf/ejabberd.yml\\\" -ejabberd log_path \\\"_build/dev/rel/ejabberd/logs/ejabberd.log\\\" -mnesia dir \\\"_build/dev/rel/ejabberd/database\\\" "
+        },
+        {
+            "name": "RELIVE",
+            "type": "erlang",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "arguments": "-sname ejabberd@localhost +K true +P 250000 -s ejabberd -ejabberd config \\\"_build/relive/conf/ejabberd.yml\\\" -ejabberd log_path \\\"_build/relive/logs/ejabberd.log\\\" -mnesia dir \\\"_build/relive/database\\\" "
+        },
+    ]
+}
