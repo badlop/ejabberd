@@ -1,48 +1,41 @@
 {
 	"name": "ejabberd",
-	// "dockerComposeFile": "docker-compose.yml",
-	"build": {
-		"dockerfile": "Dockerfile",
-		"args": {
-			"VARIANT": "latest" // 1.11.4
-		}	
-	},
-	"workspaceFolder": "/workspace",
+
+	"build": {"dockerfile": "Dockerfile"},
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
-		"terminal.integrated.defaultProfile.linux": "/bin/zsh",
+		"terminal.integrated.defaultProfile.linux": "/bin/bash"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": ["pgourlain.erlang", "jakebecker.elixir-ls"],
+	"extensions": ["erlang-ls.erlang-ls"],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [5222, 5280, 5269],
+	"forwardPorts": [1883, 4369, 5222, 5223, 5269, 5280, 5443, 7777],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "sh .devcontainer/post-create.sh",
+	"postCreateCommand": ".devcontainer/prepare-container.sh",
+
+        "customizations": {
+          "codespaces": {
+            "openFiles": [
+              "CODESPACES.md"
+            ]
+          }
+        },
 
 	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
+
 	"portsAttributes": {
-		"1883": {
-			"label": "MQTT"
-		},
-		"5222": {
-			"label": "XMPP C2S"
-		},
-		"5223": {
-			"label": "Legacy XMPP C2S"
-		},
-		"5269": {
-			"label": "XMPP S2S"
-		},
-		"5280": {
-			"label": "ejabberd HTTP"
-		},
-		"5443": {
-			"label": "ejabberd HTTPS"
-		}
+		"1883": {"label": "MQTT"},
+		"4369": {"label": "EPMD"},
+		"5222": {"label": "XMPP C2S"},
+		"5223": {"label": "XMPP C2S (legacy)"},
+		"5269": {"label": "XMPP S2S"},
+		"5280": {"label": "HTTP"},
+		"5443": {"label": "HTTPS"},
+		"7777": {"label": "XMPP SOCKS5 (proxy65)"}
 	}
 }
