@@ -1,4 +1,4 @@
-FROM alpine:3.14 AS build
+FROM alpine:3.15.4 AS build
 ARG VERSION=master
 
 RUN apk upgrade --update musl \
@@ -62,7 +62,7 @@ RUN export PEM=/opt/ejabberd/conf/server.pem \
         \ncertfiles: \
         \n  - /opt/ejabberd/conf/server.pem' "/opt/ejabberd/conf/ejabberd.yml"
 
-FROM alpine:3.14
+FROM alpine:3.15.4
 ENV HOME=/opt/ejabberd
 
 RUN apk upgrade --update musl \
