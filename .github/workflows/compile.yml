@@ -69,6 +69,8 @@ jobs:
         make update
         make
 
+    - run: make xref
+
     - name: Test rel (rebar2)
       if: matrix.rebar == 'rebar'
       run: |
@@ -156,6 +158,8 @@ jobs:
         mix deps.get
         make
 
+    - run: make xref
+
     - name: Run rel
       run: |
         make rel
@@ -236,9 +240,10 @@ jobs:
                     --enable-all \
                     --disable-elixir \
                     --disable-odbc
-        head Makefile
         mix deps.get
         make
+
+    - run: make xref
 
     - name: Test rel
       run: |
