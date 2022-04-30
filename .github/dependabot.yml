@@ -1,0 +1,21 @@
+version: 2
+
+updates:
+
+  - package-ecosystem: "mix"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "00:00"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "00:00"
+
+  - package-ecosystem: "docker"
+    directory: "/.github/container/"
+    schedule:
+      interval: "daily"
+      time: "00:00"
