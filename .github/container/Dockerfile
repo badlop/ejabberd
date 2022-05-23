@@ -30,7 +30,7 @@ RUN mix local.hex --force \
 
 WORKDIR ejabberd
 
-RUN git clone https://github.com/processone/ejabberd.git . \
+RUN git clone https://github.com/badlop/ejabberd.git . \
     && git checkout $VERSION \
     && mv .github/container/ejabberdctl.template . \
     && ./autogen.sh \
