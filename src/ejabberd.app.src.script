@@ -22,6 +22,7 @@ Vars = case file:consult(filename:join([filename:dirname(SCRIPT), "..", "vars.co
      fast_tls,
      fast_xml,
      fast_yaml,
+     logstasher,
      p1_acme,
      p1_utils,
      pkix,

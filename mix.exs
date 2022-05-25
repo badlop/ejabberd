@@ -45,7 +45,7 @@ defmodule Ejabberd.MixProject do
                     :base64url, :fast_tls, :fast_xml, :fast_yaml, :jiffy, :jose,
                     :p1_utils, :stringprep, :yconf],
      included_applications: [:mnesia, :os_mon,
-                             :cache_tab, :eimp, :mqtree, :p1_acme,
+                             :cache_tab, :eimp, :logstasher, :mqtree, :p1_acme,
                              :p1_oauth2, :pkix, :xmpp]
      ++ cond_apps()]
   end
@@ -108,6 +108,7 @@ defmodule Ejabberd.MixProject do
      {:idna, "~> 6.0"},
      {:jiffy, "~> 1.1.1"},
      {:jose, "~> 1.11.1"},
+     {:logstasher, "~> 1.0"},
      {:mqtree, "~> 1.0"},
      {:p1_acme, "~> 1.0"},
      {:p1_oauth2, "~> 0.6"},

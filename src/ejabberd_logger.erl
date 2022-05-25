@@ -294,6 +294,8 @@ start(Level) ->
 	    ok -> ok;
 	    {error, {already_exist, _}} -> ok
 	end,
+        logger:add_handler(logstasher_log, logstasher_h,
+                   #{level => all}),
 	case logger:add_handler(ejabberd_log, logger_std_h,
 				#{level => all,
 				  config => Config#{file => EjabberdLog},

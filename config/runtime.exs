@@ -11,3 +11,8 @@ config :ejabberd,
   log_path: Path.join(rootpath, 'logs/ejabberd.log')
 config :mnesia,
   dir: Path.join(rootpath, 'database/')
+
+config :logstasher,
+  transport: :udp,
+  host: "localhost",
+  port: 5000
