@@ -19,8 +19,8 @@ RUN apk upgrade --update musl \
     libpng-dev \
     libwebp-dev \
     linux-pam-dev \
-    openssl \
-    openssl-dev \
+    libressl \
+    libressl-dev \
     sqlite-dev \
     yaml-dev \
     zlib-dev
@@ -48,6 +48,7 @@ RUN BINPATH=$(dirname $(find /opt -name msgs))/bin/ \
 
 RUN export PEM=/opt/ejabberd/conf/server.pem \
     && curl -o "/opt/ejabberd/conf/cacert.pem" 'https://curl.se/ca/cacert.pem' \
+    && apk add openssl openssl-dev libcrypto3 \
     && openssl req -x509 \
             -batch \
             -nodes \
@@ -76,7 +77,7 @@ RUN apk upgrade --update musl \
     libwebp \
     linux-pam \
     ncurses-libs \
-    openssl \
+    libressl \
     sqlite \
     sqlite-libs \
     unixodbc \
