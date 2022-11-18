@@ -1,6 +1,8 @@
 name: Container
 
 on:
+  schedule:
+    - cron: '22 2 */6 * *' # every 6 days to avoid gha cache being evicted
   push:
     paths-ignore:
     - '.devcontainer/**'
@@ -21,11 +23,36 @@ jobs:
     permissions:
       packages: write
     steps:
-
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Cache build directory
+        uses: actions/cache@v3
+        with:
+          path: ~/build/
+          key: ${{runner.os}}-ctr-ct-ng-1.25.0
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install makeself
+          # https://github.com/crosstool-ng/crosstool-ng/blob/master/testing/docker/ubuntu21.10/Dockerfile
+          sudo apt-get -qq install build-essential autoconf bison flex gawk
+          sudo apt-get -qq install help2man libncurses5-dev libtool libtool-bin
+          sudo apt-get -qq install python3-dev texinfo unzip
+
+      - name: Build binary archives
+        run: |
+          sed -i "s|targets='.*'|targets='x86_64-linux-gnu aarch64-linux-gnu x86_64-linux-musl aarch64-linux-musl'|" tools/make-binaries
+          mv .github/container/ejabberdctl.template .
+          CHECK_DEPS=false tools/make-binaries
+
+      - name: Collect packages
+        run: |
+          mkdir tarballs
+          mv ejabberd-*.tar.gz tarballs
 
       - name: Checkout ejabberd-contrib
         uses: actions/checkout@v3
@@ -68,7 +95,22 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: .
-          file: .github/container/Dockerfile
+          file: .github/container/Dockerfile.binary-install
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-captcha
+
+      - name: Build and push Docker image w/o captcha pkgs
+        uses: docker/build-push-action@v2.10.0
+        with:
+          build-args: |
+            VERSION=${{ steps.gitdescribe.outputs.ver }}
+            ADD_CAPTCHA_PKGS=
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          context: .
+          file: .github/container/Dockerfile.binary-install
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           push: true

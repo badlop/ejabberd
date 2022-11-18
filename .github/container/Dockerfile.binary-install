@@ -1,0 +1,68 @@
+FROM alpine:3.17.0 AS ejabberd
+# BUILD: define image build arguments
+ARG HOME=/opt/ejabberd
+ARG ADD_CAPTCHA_PKGS="bash ghostscript-fonts imagemagick"
+
+# BUILD: mount binary tarball
+COPY tarballs/* /tmp/
+
+RUN set -x && apk -U upgrade --available \
+# BUILD: add build dependencies
+    && apk add -t build-deps \
+        libcap-utils \
+# RUNTIME: add/ define runtime packages
+    && apk add \
+        $ADD_CAPTCHA_PKGS \
+        busybox-binsh \
+        libcap2 \
+        tini \
+# RUNTIME: add runtime user and directories
+    && addgroup ejabberd -g 9000 \
+    && adduser -s /sbin/nologin -D -u 9000 -h $HOME -G ejabberd ejabberd \
+# RUNTIME: install ejabberd binary release
+    && ARCH=$(uname -m | sed -e 's/x86_64/x64/;s/aarch64/arm64/') \
+    && tar -xzf /tmp/ejabberd-*-linux-musl-$ARCH.tar.gz -C /opt \
+    && rm -rf $HOME/etc/* \
+    && chown -R 9000:9000 $HOME \
+    && install -o 9000 -g 9000 -d \
+        $HOME/logs $HOME/run $HOME/tls \
+        $HOME/upload $HOME/.ejabberd-modules \
+# RUNTIME: create symbolic links and entrypoint script
+    && echo -e \
+        "#!/bin/sh \
+        \n[ -z \$ERLANG_NODE_ARG ] && export ERLANG_NODE_ARG=ejabberd@localhost \
+        \nexport CONFIG_DIR=/opt/ejabberd/conf \
+        \nexport LOGS_DIR=/opt/ejabberd/logs \
+        \nexport SPOOL_DIR=/opt/ejabberd/database \
+        \nexec $(find /opt -name ejabberdctl) \"\$@\"" > /usr/local/bin/ejabberdctl \
+    && echo -e \
+        '#!/bin/sh \
+        \nexec "$@"' > /usr/local/bin/run.sh \
+    && chmod +x /usr/local/bin/* \
+# RUNTIME: set CAPS for binding to privileged ports & remove unnecessary binaries
+    && setcap 'cap_net_bind_service=+ep' $(find /opt -name beam.smp) \
+# CLEANUP: remove build dependencies, apk package manager and source files
+    && apk del --repositories-file /dev/null \
+        alpine-baselayout \
+        alpine-keys \
+        apk-tools \
+        build-deps \
+        libc-utils \
+    && rm -rf /var/cache/apk /etc/apk /tmp \
+    && find /lib/apk/db -type f -not -name 'installed' -delete
+
+FROM scratch
+# RUNTIME: define container runtime environment variables
+ENV HOME=/opt/ejabberd
+# RUNTIME: copy ejabberd runtime system
+COPY --from=ejabberd / /
+# RUNTIME: add ejabberd contribution modules
+COPY --chown=9000:9000 .ejabberd-modules $HOME/.ejabberd-modules
+
+# RUNTIME: define container runtime parameters
+WORKDIR $HOME
+USER ejabberd
+VOLUME ["$HOME"]
+EXPOSE 1883 4369-4399 5210 5222 5269 5280 5443
+ENTRYPOINT ["/sbin/tini","--","run.sh"]
+CMD ["ejabberdctl", "foreground"]
