@@ -59,6 +59,13 @@ COPY --from=ejabberd / /
 # RUNTIME: add ejabberd contribution modules
 COPY --chown=9000:9000 .ejabberd-modules $HOME/.ejabberd-modules
 
+HEALTHCHECK \
+    --interval=1m \
+    --timeout=5s \
+    --start-period=5s \
+    --retries=10 \
+    CMD /usr/local/bin/ejabberdctl status
+
 # RUNTIME: define container runtime parameters
 WORKDIR $HOME
 USER ejabberd
