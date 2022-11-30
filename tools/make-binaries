@@ -469,8 +469,8 @@ build_toolchain()
 {
 	local target="$1"
 	local prefix="$2"
+	local libc="$3"
 	local arch=$(arch_name "$target")
-	local libc=$(echo $target | sed "s/\-/\ /g" | awk '{print $NF}')
 	
 	if [ -d "$prefix" ]
 	then
@@ -913,7 +913,7 @@ do
 	then mode='native'
 	else mode='cross'
 	fi
-	build_toolchain "$target" "$toolchain_dir"
+	build_toolchain "$target" "$toolchain_dir" "$libc"
 	build_rel "$mode" "$target" "$prefix" "$libc"
 done
 
