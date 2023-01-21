@@ -34,6 +34,12 @@ jobs:
           path: ~/build/
           key: ${{runner.os}}-ctr-ct-ng-1.25.0
 
+      - 
+        name: Get erlang/OTP version for bootstrapping
+        run: |
+          echo "OTP_VSN=$(awk '/^otp_vsn=/ {{gsub(/[^0-9.]/, ""); print}}' tools/make-binaries)" >> $GITHUB_ENV
+          echo "ELIXIR_VSN=$(awk '/^elixir_vsn=/ {{gsub(/[^0-9.]/, ""); print}}' tools/make-binaries)" >> $GITHUB_ENV
+
       - name: Install prerequisites
         run: |
           sudo apt-get -qq update
@@ -43,9 +49,16 @@ jobs:
           sudo apt-get -qq install help2man libncurses5-dev libtool libtool-bin
           sudo apt-get -qq install python3-dev texinfo unzip
 
-      - name: Build binary archives
+      - name: Install erlang/OTP
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VSN }}
+          elixir-version: ${{ env.ELIXIR_VSN }}
+          version-type: strict
+
+      - name: Build musl-libc based binary archives
         run: |
-          sed -i "s|targets='.*'|targets='x86_64-linux-gnu aarch64-linux-gnu x86_64-linux-musl aarch64-linux-musl'|" tools/make-binaries
+          sed -i "s|targets='.*'|targets='x86_64-linux-musl aarch64-linux-musl'|" tools/make-binaries
           mv .github/container/ejabberdctl.template .
           CHECK_DEPS=false tools/make-binaries
 

@@ -351,6 +351,13 @@ add_otp_path()
 
 	if [ "$mode" = 'native' ]
 	then native_otp_bin="$prefix/bin"
+	# for github runners to build for non-native systems
+	# https://github.com/marketplace/actions/setup-erlang-otp-with-optional-elixir-and-mix-and-or-rebar3
+	elif [ ! -z "$INSTALL_DIR_FOR_OTP" ] && [ ! -z "$INSTALL_DIR_FOR_ELIXIR" ] 
+	then 
+		native_otp_bin="$INSTALL_DIR_FOR_OTP/bin"
+		native_elixir_bin="$INSTALL_DIR_FOR_ELIXIR/bin"
+		export PATH="$native_elixir_bin:$PATH"
 	fi
 	export PATH="$native_otp_bin:$PATH"
 }
