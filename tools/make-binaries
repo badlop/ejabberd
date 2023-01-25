@@ -517,7 +517,7 @@ build_deps()
 	local mode="$1"
 	local target="$2"
 	local prefix="$3"
-	local libc=$(echo $target | sed "s/\-/\ /g" | awk '{print $NF}')
+	local libc="$4"
 	local arch="$(arch_name "$target")"
 	local target_src_dir="$prefix/src"
 	local saved_path="$PATH"
@@ -765,7 +765,7 @@ build_rel()
 	fi
 
 	if [ $have_current_deps = false ]
-	then build_deps "$mode" "$target" "$prefix"
+	then build_deps "$mode" "$target" "$prefix" "$libc"
 	fi
 
 	add_otp_path "$mode" "$prefix"
