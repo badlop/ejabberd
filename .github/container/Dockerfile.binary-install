@@ -1,13 +1,11 @@
 FROM alpine:3.17.0 AS ejabberd
 
 ARG HOME=/opt/ejabberd
-ARG ADD_CAPTCHA_PKGS="bash ghostscript-fonts imagemagick"
 
 COPY tarballs/* /tmp/
 
 RUN apk -U upgrade --available \
     && apk add \
-        $ADD_CAPTCHA_PKGS \
         busybox-binsh \
         libcap-utils \
         libcap2 \
