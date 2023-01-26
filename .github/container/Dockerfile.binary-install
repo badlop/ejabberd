@@ -5,7 +5,7 @@ ARG ADD_CAPTCHA_PKGS="bash ghostscript-fonts imagemagick"
 
 COPY tarballs/* /tmp/
 
-RUN set -x && apk -U upgrade --available \
+RUN apk -U upgrade --available \
     && apk add -t build-deps \
         libcap-utils \
     && apk add \
@@ -14,10 +14,10 @@ RUN set -x && apk -U upgrade --available \
         libcap2 \
         tini
 
-RUN set -x && addgroup ejabberd -g 9000 \
+RUN addgroup ejabberd -g 9000 \
     && adduser -s /sbin/nologin -D -u 9000 -h $HOME -G ejabberd ejabberd
 
-RUN set -x && ARCH=$(uname -m | sed -e 's/x86_64/x64/;s/aarch64/arm64/') \
+RUN ARCH=$(uname -m | sed -e 's/x86_64/x64/;s/aarch64/arm64/') \
     && tar -xzf /tmp/ejabberd-*-linux-musl-$ARCH.tar.gz -C /opt \
     && rm -rf $HOME/etc/* \
     && chown -R 9000:9000 $HOME \
@@ -25,7 +25,7 @@ RUN set -x && ARCH=$(uname -m | sed -e 's/x86_64/x64/;s/aarch64/arm64/') \
         $HOME/logs $HOME/run $HOME/tls \
         $HOME/upload $HOME/.ejabberd-modules
 
-RUN set -x && echo -e \
+RUN echo -e \
         "#!/bin/sh \
         \n[ -z \$ERLANG_NODE_ARG ] && export ERLANG_NODE_ARG=ejabberd@localhost \
         \nexport CONFIG_DIR=/opt/ejabberd/conf \
@@ -39,7 +39,7 @@ RUN set -x && echo -e \
     # RUNTIME: set CAPS for binding to privileged ports & remove unnecessary binaries
     && setcap 'cap_net_bind_service=+ep' $(find /opt -name beam.smp)
 
-RUN set -x && apk del --repositories-file /dev/null \
+RUN apk del --repositories-file /dev/null \
         alpine-baselayout \
         alpine-keys \
         apk-tools \
