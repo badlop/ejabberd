@@ -110,18 +110,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}-captcha
-
-      - name: Build and push Docker image w/o captcha pkgs
-        uses: docker/build-push-action@v3
-        with:
-          build-args: |
-            ADD_CAPTCHA_PKGS=
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          context: .
-          file: .github/container/Dockerfile.binary-install
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          push: true
           tags: ${{ steps.meta.outputs.tags }}
