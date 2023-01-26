@@ -12,6 +12,7 @@ RUN apk -U upgrade --available \
         $ADD_CAPTCHA_PKGS \
         busybox-binsh \
         libcap2 \
+        openssl \
         tini
 
 RUN addgroup ejabberd -g 9000 \
@@ -39,12 +40,24 @@ RUN echo -e \
     # RUNTIME: set CAPS for binding to privileged ports & remove unnecessary binaries
     && setcap 'cap_net_bind_service=+ep' $(find /opt -name beam.smp)
 
+RUN export PEM=/opt/ejabberd/conf/server.pem \
+    && openssl req -x509 \
+            -batch \
+            -nodes \
+            -newkey rsa:4096 \
+            -keyout $PEM \
+            -out $PEM \
+            -days 3650 \
+            -subj "/CN=localhost" \
+    && chown 9000:9000 $PEM
+
 RUN apk del --repositories-file /dev/null \
         alpine-baselayout \
         alpine-keys \
         apk-tools \
         build-deps \
         libc-utils \
+        openssl \
     && rm -rf /var/cache/apk /etc/apk /tmp \
     && find /lib/apk/db -type f -not -name 'installed' -delete
 
