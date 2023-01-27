@@ -1,4 +1,4 @@
-FROM alpine:3.17.0 AS ejabberd
+FROM alpine:3.17 AS ejabberd
 
 ARG HOME=/opt/ejabberd
 
