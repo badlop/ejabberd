@@ -6,11 +6,10 @@ ARG ADD_CAPTCHA_PKGS="bash ghostscript-fonts imagemagick"
 COPY tarballs/* /tmp/
 
 RUN apk -U upgrade --available \
-    && apk add -t build-deps \
-        libcap-utils \
     && apk add \
         $ADD_CAPTCHA_PKGS \
         busybox-binsh \
+        libcap-utils \
         libcap2 \
         openssl \
         tini
@@ -51,15 +50,8 @@ RUN export PEM=/opt/ejabberd/conf/server.pem \
             -subj "/CN=localhost" \
     && chown 9000:9000 $PEM
 
-RUN apk del --repositories-file /dev/null \
-        alpine-baselayout \
-        alpine-keys \
-        apk-tools \
-        build-deps \
-        libc-utils \
-        openssl \
-    && rm -rf /var/cache/apk /etc/apk /tmp \
-    && find /lib/apk/db -type f -not -name 'installed' -delete
+RUN apk del \
+        openssl
 
 FROM scratch
 ENV HOME=/opt/ejabberd
