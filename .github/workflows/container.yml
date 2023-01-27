@@ -34,8 +34,7 @@ jobs:
           path: ~/build/
           key: ${{runner.os}}-ctr-ct-ng-1.25.0
 
-      - 
-        name: Get erlang/OTP version for bootstrapping
+      - name: Get erlang/OTP version for bootstrapping
         run: |
           echo "OTP_VSN=$(awk '/^otp_vsn=/ {{gsub(/[^0-9.]/, ""); print}}' tools/make-binaries)" >> $GITHUB_ENV
           echo "ELIXIR_VSN=$(awk '/^elixir_vsn=/ {{gsub(/[^0-9.]/, ""); print}}' tools/make-binaries)" >> $GITHUB_ENV
