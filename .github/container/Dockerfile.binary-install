@@ -50,7 +50,8 @@ RUN export PEM=/opt/ejabberd/conf/server.pem \
 
 RUN apk del \
         libcap-utils \
-        openssl
+        openssl \
+    && rm -rf /var/cache/apk /tmp/*
 
 FROM scratch
 ENV HOME=/opt/ejabberd
