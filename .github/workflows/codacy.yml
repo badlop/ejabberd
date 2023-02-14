@@ -43,14 +43,25 @@ jobs:
           sed -i '1i\-- tsqllint-disable' sql/*.sql
           sed -i '1s\disable\disable data-compression set-transaction-isolation-level\' sql/mssql*.sql
 
-      - name: Remove CSS files
-        run: rm priv/css/*
-
       - name: Remove escripts
         run: |
-          rm tools/extract-tr.sh
-          rm tools/hook_deps.sh
-          rm tools/opt_types.sh
+          echo "" > tools/extract-tr.sh
+          echo "" > tools/hook_deps.sh
+          echo "" > tools/opt_types.sh
+          echo "" > sql/lite.new.sql
+          echo "" > sql/lite.sql
+          echo "" > sql/mssql.new.sql
+          echo "" > sql/mssql.sql
+          echo "" > sql/mysql.new.sql
+          echo "" > sql/mysql.old-to-new.sql
+          echo "" > sql/mysql.sql
+          echo "" > sql/pg.new.sql
+          echo "" > sql/pg.sql
+          echo "" > priv/css/admin.css
+          echo "" > priv/css/bosh.css
+          echo "" > priv/css/muc.css
+          echo "" > priv/css/oauth.css
+          echo "" > priv/css/register.css
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
