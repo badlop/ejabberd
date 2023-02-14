@@ -38,6 +38,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Checkov
+        run: |
+          sed -i '/PASSWORD/i #checkov:skip=CKV_SECRET_6:' .github/workflows/ci.yml
+          sed -i '/PASSWORD/i #checkov:skip=CKV_SECRET_6:' test/docker/docker-compose.yml
+
+      - name: Setup CSSlint
+        run: |
+          echo "{\"exclude-list\": [\"priv/css/\"]}" > .csslintrc
+
+      - name: Setup Markdownlint
+        run: |
+          sed -i '1i\<!-- markdownlint-disable -->' .github/ISSUE_TEMPLATE/bug_report.md
+          sed -i '1i\<!-- markdownlint-disable -->' .github/ISSUE_TEMPLATE/feature_request.md
+          sed -i '1i\<!-- markdownlint-disable MD013 -->' CODE_OF_CONDUCT.md
+          sed -i '1i\<!-- markdownlint-disable MD004 MD013 MD025 MD032 MD033 -->' CHANGELOG.md
+          sed -i '1i\<!-- markdownlint-disable MD012 MD013 MD033 MD040 MD041 -->' README.md
+          sed -i '1i\<!-- markdownlint-disable MD013 MD040 -->' test/docker/README.md
+          sed -i '1i\<!-- markdownlint-disable MD003 MD012 MD013 MD029 MD031 MD032 MD040 MD041 -->' CONTAINER.md
+          sed -i '1i\<!-- markdownlint-disable MD012 MD013 MD031 MD040 MD046 -->' COMPILE.md
+          sed -i '1i\<!-- markdownlint-disable MD004 MD012 MD013 MD031 MD032 MD033 -->' CONTRIBUTING.md
+          sed -i '1i\<!-- markdownlint-disable MD013 -->' CONTRIBUTORS.md
+
+      - name: Setup Shellcheck
+        run: |
+          sed -i '1a\# shellcheck disable=all' examples/mtr/ejabberd-netbsd.sh
+          sed -i '1a\# shellcheck disable=all' tools/captcha-ng.sh
+          sed -i '1a\# shellcheck disable=SC2013,SC3014,SC3060' tools/check_xep_versions.sh
+
+      - name: Setup Stylelint
+        run: |
+          sed -i '1i\/* stylelint-disable */' priv/css/admin.css
+          sed -i '1i\/* stylelint-disable */' priv/css/bosh.css
+          sed -i '1i\/* stylelint-disable */' priv/css/muc.css
+          sed -i '1i\/* stylelint-disable */' priv/css/oauth.css
+          sed -i '1i\/* stylelint-disable */' priv/css/register.css
+
+      - name: Setup TSQLlint
+        run: |
+          sed -i '1i\-- tsqllint-disable' sql/*.sql
+          sed -i '1s\disable\disable data-compression set-transaction-isolation-level\' sql/mssql*.sql
+
+      - name: Remove escript files which are not shell scripts
+        run: |
+          rm tools/extract-tr.sh
+          rm tools/hook_deps.sh
+          rm tools/opt_types.sh
+
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@5cc54a75f9ad88159bb54046196d920e40e367a5
