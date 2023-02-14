@@ -32,7 +32,7 @@ extract_lang_po2msg ()
 	MSGSTR_PATH=$PO_PATH.msgstr
 	MSGS_PATH=$LANG_CODE.msg
 
-	cd $PO_DIR
+	cd $PO_DIR || exit
 
 	# Check PO has correct ~
 	# Let's convert to C format so we can use msgfmt
@@ -48,11 +48,13 @@ extract_lang_po2msg ()
 	msgattrib $PO_PATH --translated --no-fuzzy --no-obsolete --no-location --no-wrap | grep "^msg" | tail --lines=+3 >$MS_PATH
 	grep "^msgid" $PO_PATH.ms | sed 's/^msgid //g' >$MSGID_PATH
 	grep "^msgstr" $PO_PATH.ms | sed 's/^msgstr //g' >$MSGSTR_PATH
-	echo "%% Generated automatically" >$MSGS_PATH
-	echo "%% DO NOT EDIT: run \`make translations\` instead" >>$MSGS_PATH
-	echo "%% To improve translations please read:" >>$MSGS_PATH
-	echo "%%   https://docs.ejabberd.im/developer/extending-ejabberd/localization/" >>$MSGS_PATH
-	echo "" >>$MSGS_PATH
+	{
+	    echo "%% Generated automatically"
+	    echo "%% DO NOT EDIT: run \`make translations\` instead"
+	    echo "%% To improve translations please read:"
+	    echo "%%   https://docs.ejabberd.im/developer/extending-ejabberd/localization/"
+	    echo ""
+	} >>$MSGS_PATH
 	paste $MSGID_PATH $MSGSTR_PATH --delimiter=, | awk '{print "{" $0 "}."}' | sort -g >>$MSGS_PATH
 
 	rm $MS_PATH
@@ -68,10 +70,10 @@ extract_lang_updateall ()
 	echo "Generating POT..."
 	extract_lang_src2pot
 
-	cd $MSGS_DIR
+	cd $MSGS_DIR || exit
 	echo ""
-	echo -e "File Missing (fuzzy) Language     Last translator"
-	echo -e "---- ------- ------- --------     ---------------"
+	echo "File Missing (fuzzy) Language     Last translator"
+	echo "---- ------- ------- --------     ---------------"
 	for i in $( ls *.msg ) ; do
                 LANG_CODE=${i%.msg}
 		echo -n $LANG_CODE | awk '{printf "%-6s", $1 }'
