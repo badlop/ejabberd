@@ -1,8 +1,11 @@
 USE [master]
 GO
 
+-- prevent creation when already exists
 IF DB_ID('ejabberd_test') IS NOT NULL
-  set noexec on               -- prevent creation when already exists
+BEGIN
+SET noexec on;
+END
 
 CREATE DATABASE ejabberd_test;
 GO
