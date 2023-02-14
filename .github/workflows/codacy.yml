@@ -46,6 +46,12 @@ jobs:
       - name: Remove CSS files
         run: rm priv/css/*
 
+      - name: Remove escripts
+        run: |
+          rm tools/extract-tr.sh
+          rm tools/hook_deps.sh
+          rm tools/opt_types.sh
+
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
