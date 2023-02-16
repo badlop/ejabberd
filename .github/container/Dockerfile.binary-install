@@ -1,43 +1,22 @@
-FROM alpine:3.17 AS ejabberd
-
-ARG HOME=/opt/ejabberd
-
+ARG ALPINE_VSN='3.17'
+FROM alpine:${ALPINE_VSN} AS ejabberd
+ARG HOME='opt/ejabberd'
 COPY tarballs/* /tmp/
 
-RUN apk -U upgrade --available \
-    && apk add \
-        busybox-binsh \
-        libcap-utils \
-        libcap2 \
-        openssl \
-        tini
+WORKDIR /rootfs
+RUN mkdir -p $HOME/logs $HOME/run $HOME/tls \
+        $HOME/upload $HOME/.ejabberd-modules \
+        usr/local/bin
 
-RUN addgroup ejabberd -g 9000 \
-    && adduser -s /sbin/nologin -D -u 9000 -h $HOME -G ejabberd ejabberd
+RUN apk -U upgrade --available --no-cache \
+    && apk add --no-cache \
+        libcap-utils \
+        openssl
 
 RUN ARCH=$(uname -m | sed -e 's/x86_64/x64/;s/aarch64/arm64/') \
-    && tar -xzf /tmp/ejabberd-*-linux-musl-$ARCH.tar.gz -C /opt \
-    && rm -rf $HOME/etc/* \
-    && chown -R 9000:9000 $HOME \
-    && install -o 9000 -g 9000 -d \
-        $HOME/logs $HOME/run $HOME/tls \
-        $HOME/upload $HOME/.ejabberd-modules
+    && tar -xzf /tmp/ejabberd-*-linux-musl-$ARCH.tar.gz -C opt
 
-RUN echo -e \
-        "#!/bin/sh \
-        \n[ -z \$ERLANG_NODE_ARG ] && export ERLANG_NODE_ARG=ejabberd@localhost \
-        \nexport CONFIG_DIR=/opt/ejabberd/conf \
-        \nexport LOGS_DIR=/opt/ejabberd/logs \
-        \nexport SPOOL_DIR=/opt/ejabberd/database \
-        \nexec $(find /opt -name ejabberdctl) \"\$@\"" > /usr/local/bin/ejabberdctl \
-    && echo -e \
-        '#!/bin/sh \
-        \nexec "$@"' > /usr/local/bin/run.sh \
-    && chmod +x /usr/local/bin/* \
-    # RUNTIME: set CAPS for binding to privileged ports
-    && setcap 'cap_net_bind_service=+ep' $(find /opt -name beam.smp)
-
-RUN export PEM=/opt/ejabberd/conf/server.pem \
+RUN export PEM=$HOME/conf/server.pem \
     && openssl req -x509 \
             -batch \
             -nodes \
@@ -45,19 +24,36 @@ RUN export PEM=/opt/ejabberd/conf/server.pem \
             -keyout $PEM \
             -out $PEM \
             -days 3650 \
-            -subj "/CN=localhost" \
-    && chown 9000:9000 $PEM
+            -subj "/CN=localhost"
 
-RUN apk del \
-        libcap-utils \
-        openssl \
-    && rm -rf /var/cache/apk /tmp/*
+# set CAPS for binding to privileged ports
+RUN setcap 'cap_net_bind_service=+ep' $(find opt -name beam.smp)
 
-FROM scratch
-ENV HOME=/opt/ejabberd
+RUN chown -R 9000:9000 $HOME
 
-COPY --from=ejabberd / /
+RUN echo -e \
+        "#!/bin/sh \
+        \n[ -z \$ERLANG_NODE_ARG ] && export ERLANG_NODE_ARG=ejabberd@localhost \
+        \nexport CONFIG_DIR=/$HOME/conf \
+        \nexport LOGS_DIR=/$HOME/logs \
+        \nexport SPOOL_DIR=/$HOME/database \
+        \nexec /$(find opt -name ejabberdctl) \"\$@\"" > usr/local/bin/ejabberdctl \
+    && echo -e \
+        '#!/bin/sh \
+        \nexec "$@"' > usr/local/bin/run.sh \
+    && chmod +x usr/local/bin/*
 
+FROM alpine:${ALPINE_VSN} AS runtime
+ENV HOME='/opt/ejabberd'
+
+RUN apk -U upgrade --available --no-cache \
+    && apk add --no-cache \
+        libcap2 \
+        tini \
+    && addgroup ejabberd -g 9000 \
+    && adduser -s /sbin/nologin -D -u 9000 -h $HOME -G ejabberd ejabberd
+
+COPY --from=ejabberd /rootfs /
 COPY --chown=9000:9000 .ejabberd-modules $HOME/.ejabberd-modules
 
 HEALTHCHECK \
