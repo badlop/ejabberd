@@ -156,6 +156,9 @@ flex_master(Config) ->
 flex_slave(Config) ->
     wait_for_master(Config),
     peer_down = get_event(Config),
+    User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
+    Server = ?config(server, Config),
+    ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
     5 = get_number(Config),
     Nodes = get_nodes(Config),
     %% Since headers are received we can send initial presence without a risk
@@ -315,10 +318,16 @@ send_all_slave(Config) ->
 	      ok;
 	 (#message{type = Type, body = Body, subject = Subject} = Msg) ->
 	      ct:comment("Receiving message:~n~s", [xmpp:pp(Msg)]),
-	      #message{from = Peer,
-		       type = Type,
-		       body = Body,
-		       subject = Subject} = RecvMsg = recv_message(Config),
+              ct:pal(error, "RECEIVING MESSAGE: ~n~p", [Msg]),
+	      #message{from = RecvPeer,
+		       type = RecvType,
+		       body = RecvBody,
+		       subject = RecvSubject} = RecvMsg = recv_message(Config),
+              ct:pal(error, "RECEIVED MESSAGE: ~n~p", [RecvMsg]),
+              Peer = RecvPeer,
+              Type = RecvType,
+              Body = RecvBody,
+              Subject = RecvSubject,
 	      ct:comment("Checking if delay tag is correctly set"),
 	      #delay{from = ServerJID} = xmpp:get_subtag(RecvMsg, #delay{})
       end, Deliver),
