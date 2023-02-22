@@ -484,6 +484,12 @@ dialyzer: erlang_plt deps_plt ejabberd_plt
 	status=$$? ; if [ $$status -ne 2 ]; then exit $$status; else exit 0; fi
 endif
 
+test2:
+	CT_BACKENDS=mnesia rebar3 ct --suite=test/ejabberd_SUITE --group=offline_flex,offline_send_all
+
+test3:
+	CT_BACKENDS=redis rebar3 ct --suite=test/ejabberd_SUITE --group=offline_flex,offline_send_all
+
 test:
 	@echo "************************** NOTICE ***************************************"
 	@cat test/README
