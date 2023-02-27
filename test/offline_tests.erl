@@ -150,18 +150,27 @@ master_slave_cases(DB) ->
       master_slave_test(mucsub_mam)]}.
 
 flex_master(Config) ->
+    User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
+    Server = ?config(server, Config),
+    Mod = gen_mod:db_mod(Server, mod_offline),
+    ct:pal(error, "1 USE MAM FOR USER: ~n~p", [use_mam_for_user(User, Server)]),
+    ct:pal(error, "1 USE CACHE: ~n~p", [use_cache(Mod, Server)]),
+    ct:pal(error, "1 COUNT MESSAGES (database): ~n~p", [Mod:count_messages(User, Server)]),
+    ct:pal(error, "1 COUNT ELEMENTS (cache value): ~n~p", [mod_offline:count_offline_messages(User, Server)]),
+    ct:pal(error, "1 CACHE COUNT FOR USER: ~n~p", [ets_cache:lookup(offline_msg_counter_cache, {User, Server}, fun() -> 666 end)]),
+    ct:pal(error, "1 GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
     case send_messages(Config, 5) of
         ok ->
             ok;
-        {error, _ErrorMessage, Value} ->
-            User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
-            Server = ?config(server, Config),
-            Mod = gen_mod:db_mod(Server, mod_offline),
-            ct:pal(error, "USE MAM FOR USER: ~n~p", [use_mam_for_user(User, Server)]),
-            ct:pal(error, "USE CACHE: ~n~p", [use_cache(Mod, Server)]),
-            ct:pal(error, "COUNT MESSAGES: ~n~p", [Mod:count_messages(User, Server)]),
-            ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
-            ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
+        {error, _ErrorMessage, _Value} ->
+            ct:pal(error, "2 USE MAM FOR USER: ~n~p", [use_mam_for_user(User, Server)]),
+            ct:pal(error, "2 USE CACHE: ~n~p", [use_cache(Mod, Server)]),
+            ct:pal(error, "2 COUNT MESSAGES (database): ~n~p", [Mod:count_messages(User, Server)]),
+            ct:pal(error, "2 COUNT ELEMENTS (cache value): ~n~p", [mod_offline:count_offline_messages(User, Server)]),
+            ct:pal(error, "2 CACHE COUNT FOR USER: ~n~p", [ets_cache:lookup(offline_msg_counter_cache, {User, Server}, fun() -> 666 end)]),
+            ct:pal(error, "2 GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
+	    timer:sleep(5000),
+            ct:pal(error, "2 CACHE COUNT FOR USER: ~n~p", [ets_cache:lookup(offline_msg_counter_cache, {User, Server}, fun() -> 666 end)]),
             ok = error
     end,
     disconnect(Config).
