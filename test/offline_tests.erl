@@ -156,19 +156,38 @@ flex_master(Config) ->
         {error, _ErrorMessage, Value} ->
             User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
             Server = ?config(server, Config),
+            Mod = gen_mod:db_mod(Server, mod_offline),
+            ct:pal(error, "USE MAM FOR USER: ~n~p", [use_mam_for_user(User, Server)]),
+            ct:pal(error, "USE CACHE: ~n~p", [use_cache(Mod, Server)]),
+            ct:pal(error, "COUNT MESSAGES: ~n~p", [Mod:count_messages(User, Server)]),
             ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
             ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
             ok = error
     end,
     disconnect(Config).
 
+
+use_mam_for_user(_User, Server) ->
+    mod_offline_opt:use_mam_for_storage(Server).
+
+-spec use_cache(module(), binary()) -> boolean().
+use_cache(Mod, Host) ->
+    case erlang:function_exported(Mod, use_cache, 1) of
+        true -> Mod:use_cache(Host);
+        false -> mod_offline_opt:use_cache(Host)
+    end.
+
 flex_slave(Config) ->
     wait_for_master(Config),
     peer_down = get_event(Config),
     User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
     Server = ?config(server, Config),
-    ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
-    ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
+            Mod = gen_mod:db_mod(Server, mod_offline),
+            ct:pal(error, "USE MAM FOR USER: ~n~p", [use_mam_for_user(User, Server)]),
+            ct:pal(error, "USE CACHE: ~n~p", [use_cache(Mod, Server)]),
+            ct:pal(error, "COUNT MESSAGES: ~n~p", [Mod:count_messages(User, Server)]),
+            ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
+            ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
     5 = get_number(Config),
     Nodes = get_nodes(Config),
     %% Since headers are received we can send initial presence without a risk
