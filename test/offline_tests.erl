@@ -150,7 +150,16 @@ master_slave_cases(DB) ->
       master_slave_test(mucsub_mam)]}.
 
 flex_master(Config) ->
-    send_messages(Config, 5),
+    case send_messages(Config, 5) of
+        ok ->
+            ok;
+        {error, _ErrorMessage, Value} ->
+            User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
+            Server = ?config(server, Config),
+            ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
+            ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
+            ok = error
+    end,
     disconnect(Config).
 
 flex_slave(Config) ->
@@ -158,6 +167,7 @@ flex_slave(Config) ->
     peer_down = get_event(Config),
     User = <<"test_slave!#$%^*()`~+-;_=[]{}|\\">>,
     Server = ?config(server, Config),
+    ct:pal(error, "COUNT ELEMENTS: ~n~p", [mod_offline:count_offline_messages(User, Server)]),
     ct:pal(error, "GET ELEMENTS: ~n~p", [mod_offline:get_offline_els(User, Server)]),
     5 = get_number(Config),
     Nodes = get_nodes(Config),
@@ -367,7 +377,7 @@ send_messages(Config, Num, Type, SubEls) ->
 			    sub_els = SubEls})
       end, lists:seq(1, Num)),
     ct:comment("Waiting for all messages to be delivered to offline spool"),
-    ok = wait_for_complete(Config, Num).
+    wait_for_complete(Config, Num).
 
 recv_messages(Config, Num) ->
     wait_for_master(Config),
@@ -490,13 +500,13 @@ wait_for_complete(Config, N) ->
     lists:foldl(
       fun(_Time, ok) ->
 	      ok;
-	 (Time, Acc) ->
+	 (Time, {A, B, _}) ->
 	      timer:sleep(Time),
 	      case mod_offline:count_offline_messages(U, S) of
 		  N -> ok;
-		  _ -> Acc
+		  X -> {A, B, X}
 	      end
-      end, error, [0, 100, 200, 2000, 5000, 10000]).
+      end, {error, count_offline_messages, unknown}, [0, 100, 200, 2000, 5000, 10000]).
 
 xevent_stored(#message{body = [], subject = []}, _) -> false;
 xevent_stored(#message{type = T}, _) when T /= chat, T /= normal -> false;
