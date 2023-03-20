@@ -3,13 +3,13 @@ ARG ALPINE_VSN='3.17'
 ARG UID='9000'
 ARG USER='ejabberd'
 ARG HOME="opt/$USER"
-ARG METHOD='build'
+ARG METHOD='direct'
 ARG BUILD_DIR="/$USER"
 ARG VERSION='master'
 
 ################################################################################
-#' METHOD='build' - build and install ejabberd from source
-FROM alpine:${ALPINE_VSN} AS build
+#' METHOD='direct' - build and install ejabberd directly from source
+FROM alpine:${ALPINE_VSN} AS direct
 
 RUN apk -U add --no-cache \
         autoconf \
@@ -65,8 +65,8 @@ RUN wget -O "$HOME/conf/cacert.pem" 'https://curl.se/ca/cacert.pem' \
         \n  - /opt/ejabberd/conf/server.pem' "$HOME/conf/ejabberd.yml"
 
 ################################################################################
-#' METHOD='binary' - install ejabberd from binary tarball
-FROM alpine:${ALPINE_VSN} AS binary
+#' METHOD='package' - install ejabberd from binary tarball package
+FROM alpine:${ALPINE_VSN} AS package
 COPY tarballs/ejabberd-*-linux-musl-*.tar.gz /tmp/
 WORKDIR /rootfs
 ARG HOME
@@ -123,16 +123,16 @@ ARG UID
 RUN chown -R $UID:$UID $HOME
 
 ################################################################################
-#' METHOD='binary' - install runtime dependencies
-FROM alpine:${ALPINE_VSN} AS runtime-binary
+#' METHOD='package' - install runtime dependencies
+FROM alpine:${ALPINE_VSN} AS runtime-package
 RUN apk -U upgrade --available --no-cache \
     && apk add --no-cache \
         libcap2 \
         tini
 
 ################################################################################
-#' METHOD='build' - install runtime dependencies
-FROM runtime-binary AS runtime-build
+#' METHOD='direct' - install runtime dependencies
+FROM runtime-package AS runtime-direct
 RUN apk add --no-cache \
         expat \
         freetds \
