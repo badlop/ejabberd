@@ -25,7 +25,7 @@
 
 -author('amuhar3@gmail.com').
 
--protocol({xep, 356, '0.2.1', '16.09', "", ""}).
+-protocol({xep, 356, '0.4.1', '23.xx', "", "0.2.1 supported since 16.09"}).
 
 -behaviour(gen_server).
 -behaviour(gen_mod).
