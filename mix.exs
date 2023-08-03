@@ -100,7 +100,7 @@ defmodule Ejabberd.MixProject do
   defp deps do
     [{:base64url, "~> 1.0"},
      {:cache_tab, "~> 1.0"},
-     {:ecaptcha, github: "seriyps/ecaptcha"},
+     {:ecaptcha, github: "badlop/ecaptcha", branch: "compilation-fixes"},
      {:eimp, "~> 1.0"},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:fast_tls, "~> 1.1"},
