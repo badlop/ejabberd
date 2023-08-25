@@ -17,6 +17,7 @@ Vars = case file:consult(filename:join([filename:dirname(SCRIPT), "..", "vars.co
   {applications, [kernel, sasl, ssl, stdlib, syntax_tools]},
   {included_applications,
     [compiler, inets, mnesia, os_mon,
+     observer, runtime_tools, % for `ejabberdctl etop`
      cache_tab,
      eimp,
      fast_tls,
