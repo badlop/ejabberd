@@ -42,7 +42,7 @@ defmodule Ejabberd.MixProject do
     [mod: {:ejabberd_app, []},
      extra_applications: [:mix],
      applications: [:idna, :inets, :kernel, :sasl, :ssl, :stdlib,
-                    :base64url, :fast_tls, :fast_xml, :fast_yaml, :jiffy, :jose,
+                    :base64url, :ecaptcha, :fast_tls, :fast_xml, :fast_yaml, :jiffy, :jose,
                     :p1_utils, :stringprep, :syntax_tools, :yconf],
      included_applications: [:mnesia, :os_mon,
                              :cache_tab, :eimp, :mqtree, :p1_acme,
@@ -100,6 +100,7 @@ defmodule Ejabberd.MixProject do
   defp deps do
     [{:base64url, "~> 1.0"},
      {:cache_tab, "~> 1.0"},
+     {:ecaptcha, github: "seriyps/ecaptcha"},
      {:eimp, "~> 1.0"},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:fast_tls, "~> 1.1"},
