@@ -24,6 +24,7 @@ RUN apk -U add --no-cache \
         curl \
         expat-dev \
         file \
+        freetype-dev \
         gd-dev \
         git \
         jpeg-dev \
