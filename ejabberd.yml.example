@@ -57,6 +57,7 @@ listen:
       /api: mod_http_api
       /bosh: mod_bosh
       /captcha: ejabberd_captcha
+      /register: mod_register_web
       /upload: mod_http_upload
       /ws: ejabberd_http_ws
   -
@@ -154,6 +155,8 @@ shaper_rules:
     normal: all
   s2s_shaper: fast
 
+captcha_cmd: mod_ecaptcha
+
 modules:
   mod_adhoc: {}
   mod_admin_extra: {}
@@ -167,6 +170,7 @@ modules:
   mod_client_state: {}
   mod_configure: {}
   mod_disco: {}
+  mod_ecaptcha: {}
   mod_fail2ban: {}
   mod_http_api: {}
   mod_http_upload:
