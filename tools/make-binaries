@@ -756,6 +756,7 @@ build_rel()
 	export CFLAGS="-g0 -O2 -pipe -fomit-frame-pointer -static-libgcc $CPPFLAGS"
 	export CXXFLAGS="$CFLAGS -static-libstdc++"
 	export LDFLAGS="-L$prefix/lib -static-libgcc -static-libstdc++"
+	export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig"
 	export ERL_COMPILER_OPTIONS='[no_debug_info]' # Building 25.x fails with 'deterministic'.
 
 	if [ "$mode" = 'cross' ]
