@@ -756,7 +756,6 @@ build_rel()
 	export CFLAGS="-g0 -O2 -pipe -fomit-frame-pointer -static-libgcc $CPPFLAGS"
 	export CXXFLAGS="$CFLAGS -static-libstdc++"
 	export LDFLAGS="-L$prefix/lib -static-libgcc -static-libstdc++"
-	export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig"
 	export ERL_COMPILER_OPTIONS='[no_debug_info]' # Building 25.x fails with 'deterministic'.
 
 	if [ "$mode" = 'cross' ]
@@ -784,7 +783,6 @@ build_rel()
 	./autogen.sh
 	eimp_cflags='-fcommon'
 	eimp_libs='-lwebp -ljpeg -lpng -lz -lm'
-	export FREETYPE_CFLAGS="-I$prefix/include/freetype2 $CFLAGS $LDFLAGS -lfreetype -lpng -lz"
 	export CC="$CC -Wl,-ldl" # Required by (statically linking) epam.
 	export LIBS="$eimp_libs -lcrypto -lpthread -ldl"
 	export CFLAGS="$CFLAGS $eimp_cflags"
