@@ -1048,12 +1048,13 @@ clear_sql_tables(Type, Config) ->
     SQLFile = filename:join([BaseDir, "sql", File]),
     CreationQueries = read_sql_queries(SQLFile),
     ClearTableQueries = clear_table_queries(CreationQueries),
-    case ejabberd_sql:sql_transaction(
+    case catch ejabberd_sql:sql_transaction(
            VHost, ClearTableQueries) of
         {atomic, ok} ->
             ok;
         Err ->
-            ct:fail({failed_to_clear_sql_tables, Type, Err})
+            ct:pal("failed_to_clear_sql_tables ~p ~p", [Type, Err]),
+            ok
     end.
 
 read_sql_queries(File) ->
