@@ -8,6 +8,7 @@ REQUIRE_ERLANG_MAX="100.0.0 (No Max)"
 
 AC_CONFIG_MACRO_DIR([m4])
 
+
 # Checks for programs.
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
