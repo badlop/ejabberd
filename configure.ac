@@ -13,6 +13,7 @@ AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_PROG_SED
 
+
 if test "x$GCC" = "xyes"; then
     CFLAGS="$CFLAGS -Wall"
 fi
