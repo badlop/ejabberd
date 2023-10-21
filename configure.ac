@@ -17,6 +17,9 @@ if test "x$GCC" = "xyes"; then
     CFLAGS="$CFLAGS -Wall"
 fi
 
+
+
+
 # Checks Erlang runtime and compiler
 AC_ARG_WITH(erlang,
 	AS_HELP_STRING([--with-erlang=dir],[search for erlang in dir]),
