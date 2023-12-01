@@ -155,6 +155,7 @@ shaper_rules:
   s2s_shaper: fast
 
 modules:
+  'ModLibcluster': {}
   mod_adhoc: {}
   mod_admin_extra: {}
   mod_announce:

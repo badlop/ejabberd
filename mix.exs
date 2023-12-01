@@ -45,6 +45,7 @@ defmodule Ejabberd.MixProject do
                     :base64url, :fast_tls, :fast_xml, :fast_yaml, :jiffy, :jose,
                     :p1_utils, :stringprep, :syntax_tools, :yconf],
      included_applications: [:mnesia, :os_mon,
+                             :libcluster,
                              :cache_tab, :eimp, :mqtree, :p1_acme,
                              :p1_oauth2, :pkix, :xmpp]
      ++ cond_apps()]
@@ -100,6 +101,7 @@ defmodule Ejabberd.MixProject do
   defp deps do
     [{:base64url, "~> 1.0"},
      {:cache_tab, "~> 1.0"},
+     {:libcluster, "~> 3.3.3"},
      {:eimp, "~> 1.0"},
      {:ex_doc, ">= 0.0.0", only: :dev},
      {:fast_tls, git: "https://github.com/processone/fast_tls.git", ref: "c98c1a7d190201dc4113babed91fdfedac2bf42a", override: true},
