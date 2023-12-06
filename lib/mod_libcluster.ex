@@ -4,7 +4,7 @@ defmodule ModLibcluster do
   def start(_host, _opts) do
     info('Starting ejabberd module Libcluster Demo')
     topologies = [
-      example: [
+      epmd_ejabberd_cluster: [
         strategy: Cluster.Strategy.Epmd,
         config: [hosts: [:"ejabberd1@127.0.0.1", :"ejabberd2@127.0.0.1"]],
         connect: {:ejabberd_admin, :join_cluster, []},
@@ -12,10 +12,10 @@ defmodule ModLibcluster do
       ]
     ]
     children = [
-      {Cluster.Supervisor, [topologies, [name: MyApp.ClusterSupervisor]]},
+      {Cluster.Supervisor, [topologies, [name: Ejabberd.ClusterSupervisor]]},
       # ..other children..
     ]
-    Supervisor.start_link(children, strategy: :one_for_one, name: MyApp.Supervisor)
+    Supervisor.start_link(children, strategy: :one_for_one, name: Ejabberd.Supervisor)
     info('Started ejabberd module Libcluster Demo')
     :ok
   end
