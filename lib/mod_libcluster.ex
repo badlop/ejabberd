@@ -1,19 +1,18 @@
 defmodule ModLibcluster do
   use Ejabberd.Module
 
-  def start(_host, _opts) do
-    info('Starting ejabberd module Libcluster Demo')
+  def start(_host, opts) do
+    info('Starting ejabberd module Libcluster with nodes #{inspect(opts[:nodes])}')
     topologies = [
       epmd_ejabberd_cluster: [
         strategy: Cluster.Strategy.Epmd,
-        config: [hosts: [:"ejabberd1@127.0.0.1", :"ejabberd2@127.0.0.1"]],
+        config: [hosts: opts[:nodes]],
         connect: {:ejabberd_admin, :join_cluster, []},
         disconnect: {:ejabberd_admin, :leave_cluster, []}
       ]
     ]
     children = [
       {Cluster.Supervisor, [topologies, [name: Ejabberd.ClusterSupervisor]]},
-      # ..other children..
     ]
     Supervisor.start_link(children, strategy: :one_for_one, name: Ejabberd.Supervisor)
     info('Started ejabberd module Libcluster Demo')
@@ -29,8 +28,14 @@ defmodule ModLibcluster do
     []
   end
 
+  def mod_opt_type(:nodes) do
+    :econf.list(:econf.atom)
+  end
+
   def mod_options(_host) do
-    []
+    [
+     {:nodes, []}
+    ]
   end
 
   def mod_doc() do

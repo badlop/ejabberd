@@ -155,7 +155,10 @@ shaper_rules:
   s2s_shaper: fast
 
 modules:
-  'ModLibcluster': {}
+  'ModLibcluster':
+    nodes:
+      - ejabberd1@127.0.0.1
+      - ejabberd2@127.0.0.1
   mod_adhoc: {}
   mod_admin_extra: {}
   mod_announce:
