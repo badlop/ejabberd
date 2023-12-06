@@ -7,6 +7,8 @@ defmodule ModLibcluster do
       example: [
         strategy: Cluster.Strategy.Epmd,
         config: [hosts: [:"ejabberd1@127.0.0.1", :"ejabberd2@127.0.0.1"]],
+        connect: {:ejabberd_admin, :join_cluster, []},
+        disconnect: {:ejabberd_admin, :leave_cluster, []}
       ]
     ]
     children = [

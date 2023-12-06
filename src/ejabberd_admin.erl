@@ -673,11 +673,27 @@ convert_to_yaml(In, Out) ->
 %%% Cluster management
 %%%
 
-join_cluster(NodeBin) ->
-    ejabberd_cluster:join(list_to_atom(binary_to_list(NodeBin))).
+join_cluster(NodeBin) when is_binary(NodeBin) ->
+    join_cluster(list_to_atom(binary_to_list(NodeBin)));
+join_cluster(Node) when is_atom(Node) ->
+    case init:get_status() of
+        {started, started} ->
+            case ejabberd_cluster:join(Node) of
+                ok ->
+                    true;
+                {error, Error} ->
+                    ?INFO_MSG("Error trying to join cluster: ~p", [Error]),
+                    false
+            end;
+        {starting, started} ->
+            timer:apply_after(1000, ejabberd_admin, join_cluster, [Node]),
+            false
+    end.
 
-leave_cluster(NodeBin) ->
-    ejabberd_cluster:leave(list_to_atom(binary_to_list(NodeBin))).
+leave_cluster(NodeBin) when is_binary(NodeBin) ->
+    leave_cluster(list_to_atom(binary_to_list(NodeBin)));
+leave_cluster(Node) ->
+    ejabberd_cluster:leave(Node).
 
 list_cluster() ->
     ejabberd_cluster:get_nodes().
