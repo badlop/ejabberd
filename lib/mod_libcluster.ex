@@ -2,11 +2,26 @@ defmodule ModLibcluster do
   use Ejabberd.Module
 
   def start(_host, opts) do
-    info('Starting ejabberd module Libcluster with nodes #{inspect(opts[:nodes])}')
+
+    strategy = case opts[:strategy] do
+      :local_epmd ->
+        :"Elixir.Cluster.Strategy.LocalEpmd"
+      :epmd ->
+        :"Elixir.Cluster.Strategy.Epmd"
+      :kubernetes ->
+        :"Elixir.Cluster.Strategy.Kubernetes"
+      other_strategy ->
+        other_strategy
+    end
+    info('Starting ejabberd module Libcluster with stategy #{inspect(strategy)}')
+
+    config = opts[:config]
+    info('Starting ejabberd module Libcluster with config #{inspect(config)}')
+
     topologies = [
-      epmd_ejabberd_cluster: [
-        strategy: Cluster.Strategy.Epmd,
-        config: [hosts: opts[:nodes]],
+      ejabberd_cluster: [
+        strategy: strategy,
+        config: config,
         connect: {:ejabberd_admin, :join_cluster, []},
         disconnect: {:ejabberd_admin, :leave_cluster, []}
       ]
@@ -28,13 +43,18 @@ defmodule ModLibcluster do
     []
   end
 
-  def mod_opt_type(:nodes) do
-    :econf.list(:econf.atom)
+  def mod_opt_type(:strategy) do
+    :econf.atom
+  end
+
+  def mod_opt_type(:config) do
+    :econf.list(:econf.any)
   end
 
   def mod_options(_host) do
     [
-     {:nodes, []}
+     {:strategy, :local_epmd},
+     {:config, []}
     ]
   end
 
