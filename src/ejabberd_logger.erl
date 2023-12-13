@@ -31,6 +31,7 @@
 -ifndef(LAGER).
 -export([progress_filter/2]).
 -endif.
+-export([is_relive_newelixir/0]).
 %% Deprecated functions
 -export([restart/0, reopen_log/0, rotate_log/0]).
 -deprecated([{restart, 0},
@@ -97,6 +98,12 @@ get_integer_env(Name, Default) ->
                                    [Name, Junk, Default]),
             Default
     end.
+
+is_relive_newelixir() ->
+    IsElixir = lists:keymember(elixir, 1, application:loaded_applications()),
+    IsNewElixir = (non_existing /= code:which('Elixir.Kernel.TypespecError')),
+    IsRelive = ("true" == os:getenv("RELIVE")),
+    IsElixir and IsNewElixir and IsRelive.
 
 -ifdef(LAGER).
 -spec get_string_env(atom(), T) -> T.
@@ -284,7 +291,10 @@ start(Level) ->
 		  max_size => 100*1024,
 		  single_line => false},
     FileFmtConfig = FmtConfig#{template => file_template()},
-    ConsoleFmtConfig = FmtConfig#{template => console_template()},
+    ConsoleFmtConfig = case is_relive_newelixir() of
+                           false -> FmtConfig#{template => console_template()};
+                           true -> FmtConfig
+                       end,
     try
 	ok = logger:set_primary_config(level, Level),
 	DefaultHandlerId = get_default_handlerid(),

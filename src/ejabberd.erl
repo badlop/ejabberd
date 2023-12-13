@@ -128,6 +128,11 @@ check_app_modules(App, StartFlag) ->
     end.
 
 check_apps() ->
+    case ejabberd_logger:is_relive_newelixir() of
+        false -> check_apps2();
+        true -> ok
+    end.
+check_apps2() ->
     spawn(
       fun() ->
 	      Apps = [ejabberd |
