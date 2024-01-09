@@ -38,6 +38,7 @@
 start(Host) ->
     case should_update_schema(Host) of
         true ->
+            ?INFO_MSG("SQL Schema: Let's update it!", []), %+++
             case table_exists(Host, <<"schema_version">>) of
                 true ->
                     ok;
@@ -59,10 +60,12 @@ start(Host) ->
                                        [Table#sql_table.name, Error]),
                             {error, Error};
                         _ ->
+                            ?INFO_MSG("SQL Schema: created succesfully", []), %+++
                             ok
                     end
             end;
         false ->
+            ?INFO_MSG("SQL Schema: Option to update it was disabled", []), %+++
             ok
     end.
 
