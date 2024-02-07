@@ -75,8 +75,12 @@ jobs:
           # This will hand over control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
 
+      - name: Clean duplicates
+        run:
+          jq '.runs |= unique_by({tool, invocations, results})' <results.sarif >codacy.sarif
+
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@main
         with:
-          sarif_file: results.sarif
+          sarif_file: codacy.sarif
