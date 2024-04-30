@@ -42,6 +42,7 @@
 	 is_mucsub_message/1, best_match/2, pmap/2, peach/2, format_exception/4,
 	 get_my_ipv4_address/0, get_my_ipv6_address/0, parse_ip_mask/1,
 	 crypto_hmac/3, crypto_hmac/4, uri_parse/1, uri_parse/2, uri_quote/1,
+         json_encode/1, json_decode_maps/1, json_decode_list/1,
 	 match_ip_mask/3, format_hosts_list/1, format_cycle/1, delete_dir/1,
 	 semver_to_xxyy/1, logical_processors/0, get_mucsub_event_type/1]).
 
@@ -57,6 +58,13 @@
 %% Copied from erlang/otp/lib/stdlib/src/re.erl
 -type re_mp() :: {re_pattern, _, _, _, _}.
 -export_type([re_mp/0]).
+
+-ifdef(OTP_BELOW_27).
+-type json_value() :: jiffy:json_value().
+-else.
+-type json_value() :: json:encode_value().
+-endif.
+-export_type([json_value/0]).
 
 -type distance_cache() :: #{{string(), string()} => non_neg_integer()}.
 
@@ -120,6 +128,26 @@ crypto_hmac(Type, Key, Data, MacL) -> crypto:hmac(Type, Key, Data, MacL).
 -else.
 crypto_hmac(Type, Key, Data) -> crypto:mac(hmac, Type, Key, Data).
 crypto_hmac(Type, Key, Data, MacL) -> crypto:macN(hmac, Type, Key, Data, MacL).
+-endif.
+
+-ifdef(OTP_BELOW_27).
+json_encode(Term) ->
+    jiffy:encode(Term).
+json_decode_maps(Bin) ->
+    jiffy:decode(Bin, [return_maps]).
+json_decode_list(Bin) ->
+    case jiffy:decode(Bin) of
+        List when is_list(List) -> List;
+        {List} when is_list(List) -> List;
+        Other -> [Other]
+    end.
+-else.
+json_encode(Term) ->
+    iolist_to_binary(json:encode(Term)).
+json_decode_maps(Bin) ->
+    json:decode(Bin).
+json_decode_list(Bin) ->
+    maps:to_list(json:decode(Bin)).
 -endif.
 
 %%%===================================================================

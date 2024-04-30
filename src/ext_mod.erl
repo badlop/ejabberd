@@ -884,7 +884,7 @@ get_commit_details2(Path) ->
     end.
 
 parse_details(Body) ->
-    {Contents} = jiffy:decode(Body),
+    Contents = misc:json_decode_list(Body),
 
     {_, {Commit}} = lists:keyfind(<<"commit">>, 1, Contents),
     {_, Sha} = lists:keyfind(<<"sha">>, 1, Commit),

@@ -78,6 +78,7 @@ process([], #request{method = 'GET', host = Host, raw_path = RawPath}) ->
             undefined -> Init2;
             BoshURL -> [{<<"bosh_service_url">>, BoshURL} | Init2]
         end,
+    InitMap = maps:from_list(Init3),
     {200, [html],
      [<<"<!DOCTYPE html>">>,
       <<"<html>">>,
@@ -89,7 +90,7 @@ process([], #request{method = 'GET', host = Host, raw_path = RawPath}) ->
       <<"</head>">>,
       <<"<body>">>,
       <<"<script>">>,
-      <<"converse.initialize(">>, jiffy:encode({Init3}), <<");">>,
+      <<"converse.initialize(">>, misc:json_encode(InitMap), <<");">>,
       <<"</script>">>,
       <<"</body>">>,
       <<"</html>">>]};
