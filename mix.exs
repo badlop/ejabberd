@@ -140,12 +140,12 @@ defmodule Ejabberd.MixProject do
      {:fast_yaml, "~> 1.0"},
      {:idna, "~> 6.0"},
      {:mqtree, "~> 1.0"},
-     {:p1_acme, git: "https://github.com/processone/p1_acme", branch: "master"},
+     {:p1_acme, "~> 1.0"},
      {:p1_oauth2, "~> 0.6"},
      {:p1_utils, "~> 1.0"},
-     {:pkix, git: "https://github.com/processone/pkix"},
+     {:pkix, "~> 1.0"},
      {:stringprep, ">= 1.0.26"},
-     {:xmpp, git: "https://github.com/processone/xmpp", override: true},
+     {:xmpp, ">= 1.8.2"},
      {:yconf, "~> 1.0"}]
     ++ cond_deps()
   end
@@ -171,12 +171,12 @@ defmodule Ejabberd.MixProject do
                          {config(:sip), {:esip, "~> 1.0"}},
                          {config(:zlib), {:ezlib, "~> 1.0"}},
                          {if_version_above(~c"23", true), {:jose, "~> 1.11.10"}},
-                         {if_version_below(~c"24", true), {:jose, "1.11.1"}},
+                         {if_version_below(~c"24", true), {:jose, "1.11.1", override: true}},
                          {if_version_below(~c"27", true), {:jiffy, "~> 1.1.1"}},
                          {if_version_below(~c"22", true), {:lager, "~> 3.9.1"}},
                          {config(:lua), {:luerl, "~> 1.2.0"}},
-                         {config(:mysql), {:p1_mysql, git: "https://github.com/processone/p1_mysql" }},
-                         {config(:pgsql), {:p1_pgsql, git: "https://github.com/processone/p1_pgsql"}},
+                         {config(:mysql), {:p1_mysql, ">= 1.0.24"}},
+                         {config(:pgsql), {:p1_pgsql, ">= 1.1.26"}},
                          {config(:sqlite), {:sqlite3, "~> 1.1"}},
                          {config(:stun), {:stun, "~> 1.0"}}], do:
       dep
