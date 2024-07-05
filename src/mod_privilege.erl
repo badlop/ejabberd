@@ -45,12 +45,15 @@
 -include("translate.hrl").
 
 -type roster_permission() :: both | get | set.
+-type iq_permission() :: both | get | set.
 -type presence_permission() :: managed_entity | roster.
 -type message_permission() :: outgoing.
 -type roster_permissions() :: [{roster_permission(), acl:acl()}].
+-type iq_permissions() :: [{iq_permission(), acl:acl()}].
 -type presence_permissions() :: [{presence_permission(), acl:acl()}].
 -type message_permissions() :: [{message_permission(), acl:acl()}].
 -type access() :: [{roster, roster_permissions()} |
+		   {iq, iq_permissions()} |
 		   {presence, presence_permissions()} |
 		   {message, message_permissions()}].
 -type permissions() :: #{binary() => access()}.
@@ -71,6 +74,9 @@ reload(_Host, _NewOpts, _OldOpts) ->
 mod_opt_type(roster) ->
     econf:options(
       #{both => econf:acl(), get => econf:acl(), set => econf:acl()});
+mod_opt_type(iq) ->
+    econf:options(
+      #{both => econf:acl(), get => econf:acl(), set => econf:acl()});
 mod_opt_type(message) ->
     econf:options(
       #{outgoing => econf:acl()});
@@ -80,6 +86,7 @@ mod_opt_type(presence) ->
 
 mod_options(_) ->
     [{roster, [{both, none}, {get, none}, {set, none}]},
+     {iq, [{both, none}, {get, none}, {set, none}]},
      {presence, [{managed_entity, none}, {roster, none}]},
      {message, [{outgoing,none}]}].
 
@@ -129,6 +136,27 @@ mod_doc() ->
               #{value => ?T("AccessName"),
                 desc =>
                     ?T("Sets write access to a user's roster. "
+                       "The default value is 'none'.")}}]},
+           {iq,
+            #{value => ?T("Options"),
+              desc =>
+                  ?T("This option defines IQ permissions. "
+                     "By default no permissions are given. "
+                     "The 'Options' are:")},
+            [{both,
+              #{value => ?T("AccessName"),
+                desc =>
+                    ?T("Allows sending IQ stanzas of type 'get' and 'set'. "
+                       "The default value is 'none'.")}},
+             {get,
+              #{value => ?T("AccessName"),
+                desc =>
+                    ?T("Allows sending IQ stanzas of type 'get'. "
+                       "The default value is 'none'.")}},
+             {set,
+              #{value => ?T("AccessName"),
+                desc =>
+                    ?T("Allows sending IQ stanzas of type 'set'. "
                        "The default value is 'none'.")}}]},
            {message,
             #{value => ?T("Options"),
@@ -211,6 +239,27 @@ process_message(#message{from = #jid{luser = <<"">>, lresource = <<"">>} = From,
 	error ->
 	    %% Component is disconnected
 	    ok
+    end;
+process_message(#iq{from = #jid{luser = <<"">>, lresource = <<"">>} = From,
+			 to = #jid{lresource = <<"">>} = To,
+			 type = Type} = IQ) when Type /= error ->
+    Host = From#jid.lserver,
+    ServerHost = To#jid.lserver,
+    Permissions = get_permissions(ServerHost),
+    case maps:find(Host, Permissions) of
+	{ok, Access} ->
+	    Permission = proplists:get_value(iq, Access, none),
+	    case (Permission == both)
+		     orelse (Permission == get andalso Type == get)
+		     orelse (Permission == set andalso Type == set) of
+		true ->
+		    {true, xmpp:put_meta(IQ, privilege_from, To)};
+		false ->
+		    false
+	    end;
+	error ->
+	    %% Component is disconnected
+	    false
     end;
 process_message(_Stanza) ->
     ok.
@@ -320,22 +369,26 @@ handle_cast({component_connected, Host}, State) ->
     From = jid:make(ServerHost),
     To = jid:make(Host),
     RosterPerm = get_roster_permission(ServerHost, Host),
+    IqPerm = get_iq_permission(ServerHost, Host),
     PresencePerm = get_presence_permission(ServerHost, Host),
     MessagePerm = get_message_permission(ServerHost, Host),
-    if RosterPerm /= none; PresencePerm /= none; MessagePerm /= none ->
+    if RosterPerm /= none; IqPerm /= none; PresencePerm /= none; MessagePerm /= none ->
 	    Priv = #privilege{perms = [#privilege_perm{access = message,
 						       type = MessagePerm},
 				       #privilege_perm{access = roster,
 						       type = RosterPerm},
+				       #privilege_perm{access = iq,
+						       type = IqPerm},
 				       #privilege_perm{access = presence,
 						       type = PresencePerm}]},
 	    ?INFO_MSG("Granting permissions to external "
-		      "component '~ts': roster = ~ts, presence = ~ts, "
+		      "component '~ts': roster = ~ts, iq = ~ts, presence = ~ts, "
 		      "message = ~ts",
-		      [Host, RosterPerm, PresencePerm, MessagePerm]),
+		      [Host, RosterPerm, IqPerm, PresencePerm, MessagePerm]),
 	    Msg = #message{from = From, to = To,  sub_els = [Priv]},
 	    ejabberd_router:route(Msg),
 	    Permissions = maps:put(Host, [{roster, RosterPerm},
+					  {iq, IqPerm},
 					  {presence, PresencePerm},
 					  {message, MessagePerm}],
 				   get_permissions(ServerHost)),
@@ -451,6 +504,22 @@ get_roster_permission(ServerHost, Host) ->
 	    end
     end.
 
+-spec get_iq_permission(binary(), binary()) -> iq_permission() | none.
+get_iq_permission(ServerHost, Host) ->
+    Perms = mod_privilege_opt:iq(ServerHost),
+    case match_rule(ServerHost, Host, Perms, both) of
+	allow ->
+	    both;
+	deny ->
+	    Get = match_rule(ServerHost, Host, Perms, get),
+	    Set = match_rule(ServerHost, Host, Perms, set),
+	    if Get == allow, Set == allow -> both;
+	       Get == allow -> get;
+	       Set == allow -> set;
+	       true -> none
+	    end
+    end.
+
 -spec get_message_permission(binary(), binary()) -> message_permission() | none.
 get_message_permission(ServerHost, Host) ->
     Perms = mod_privilege_opt:message(ServerHost),
@@ -473,6 +542,7 @@ get_presence_permission(ServerHost, Host) ->
     end.
 
 -spec match_rule(binary(), binary(), roster_permissions(), roster_permission()) -> allow | deny;
+		(binary(), binary(), iq_permissions(), iq_permission()) -> allow | deny;
 		(binary(), binary(), presence_permissions(), presence_permission()) -> allow | deny;
 		(binary(), binary(), message_permissions(), message_permission()) -> allow | deny.
 match_rule(ServerHost, Host, Perms, Type) ->
