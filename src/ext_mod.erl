@@ -762,8 +762,10 @@ fetch_rebar_deps(SrcDir) ->
             {ok, CurDir} = file:get_cwd(),
             file:set_cwd(SrcDir),
             filelib:ensure_dir(filename:join("deps", ".")),
-            lists:foreach(fun({_App, Cmd}) ->
-                        os:cmd("cd deps; "++Cmd++"; cd ..")
+            lists:foreach(fun({App, Cmd}) ->
+                        io:format("Fetching dependency ~s: ", [App]),
+                        Result = os:cmd("cd deps; "++Cmd++"; cd .."),
+                        io:format("~s", [Result])
                 end, Deps),
             file:set_cwd(CurDir)
     end.
@@ -777,6 +779,28 @@ rebar_deps(Script) ->
         _ ->
             []
     end.
+
+rebar_dep({App, Version, Git}) when Version /= ".*" ->
+    AppS = atom_to_list(App),
+    %%
+    %% Work in Progress trying to get the feature work when compiled with mix and running OTP release:
+    %%
+    %BootPath = filename:rootname(filelib:wildcard("../releases/*/start_clean.boot")),
+    %RL = "../lib",
+    %Help = os:cmd("iex --boot " ++ BootPath ++ " -S mix hex.package"),
+    %Help = os:cmd("iex --boot " ++ BootPath ++ " --boot-var RELEASE_LIB "++RL++" -S mix hex.package"),
+    %Help = os:cmd("iex --boot " ++ BootPath ++ " --boot-var RELEASE_LIB ../lib/ -S mix hex.package"),
+    %
+    Help = os:cmd("mix hex.package"),
+    case string:find(Help, "mix hex.package fetch") /= nomatch of
+        true ->
+            {App, "mix hex.package fetch "++AppS++" "++Version++" --unpack"};
+        false ->
+            io:format("I'll download ~p using git because I can't use Mix "
+                      "to fetch from hex.pm:~n~s", [AppS, help]),
+            rebar_dep({App, ".*", Git})
+    end;
+
 rebar_dep({App, _, {git, Url}}) ->
     {App, "git clone "++Url++" "++filename:basename(App)};
 rebar_dep({App, _, {git, Url, {branch, Ref}}}) ->
