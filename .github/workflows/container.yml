@@ -22,13 +22,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      -
-        name: Download digests
+
+      - name: Download tarballs
         uses: actions/download-artifact@v4
         with:
-          path: tarballs
-          pattern: ejabberd-tarballs
-          merge-multiple: true
+          name: ejabberd-tarballs
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Checkout ejabberd-contrib
         uses: actions/checkout@v4
