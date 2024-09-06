@@ -379,17 +379,17 @@ console_template() ->
                 {logger_formatter, _} ->
                     msg
             end,
-            [date, " ", time, " [", level, "] ", MessageFormat, "\n"];
+            [date, " ", time, " +382+[", level, "] ", MessageFormat, "\n"];
         false ->
-            [time, " [", level, "] " | msg()]
+            [time, " +384+[", level, "] " | msg()]
     end.
 -else.
 console_template() ->
-    [time, " [", level, "] " | msg()].
+    [time, " +388+[", level, "] " | msg()].
 -endif.
 
 file_template() ->
-    [time, " [", level, "] ", pid,
+    [time, " +392+[", level, "] ", pid,
      {mfa, ["@", mfa, {line, [":", line], []}], []}, " " | msg()].
 
 msg() ->
