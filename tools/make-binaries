@@ -73,7 +73,7 @@ yaml_vsn='0.2.5'
 ssl_vsn='3.3.2'
 otp_vsn='26.2.5.4'
 elixir_vsn='1.17.2'
-pam_vsn='1.7.0'
+pam_vsn='1.6.1'
 png_vsn='1.6.43'
 jpeg_vsn='9f'
 webp_vsn='1.4.0'
@@ -623,17 +623,12 @@ build_deps()
 
 	info "Building Linux-PAM $pam_vsn for $arch ..."
 	cd "$target_src_dir/$pam_dir"
-	mkdir build
-	CFLAGS="$CFLAGS -O3 -fPIC" meson setup \
-	    --prefix="$prefix" --includedir="$prefix/include/security" \
-	    -Dexamples=false \
-	    build
-	    # --enable-static \ # what option replaces this?
-	    # --disable-shared \ # what option replaces this?
-	    # --enable-db=no \ # replace with option pam_userdb=disabled or some other?
-	meson compile -C build
-	meson test -C build
-	meson install -C build
+	$configure --prefix="$prefix" --includedir="$prefix/include/security" \
+	    --enable-static --disable-shared --disable-doc --disable-examples \
+	    --enable-db=no \
+	    CFLAGS="$CFLAGS -O3 -fPIC"
+	make
+	make install
 	cd "$OLDPWD"
 
 	info "Building libpng $png_vsn for $arch-$libc ..."

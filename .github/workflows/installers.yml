@@ -33,7 +33,7 @@ jobs:
           sudo apt-get -qq update
           sudo apt-get -qq install makeself
           # https://github.com/crosstool-ng/crosstool-ng/blob/master/testing/docker/ubuntu21.10/Dockerfile
-          sudo apt-get -qq install build-essential autoconf bison flex gawk meson
+          sudo apt-get -qq install build-essential autoconf bison flex gawk
           sudo apt-get -qq install help2man libncurses5-dev libtool libtool-bin
           sudo apt-get -qq install python3-dev texinfo unzip
       - name: Install FPM
