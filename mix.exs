@@ -145,7 +145,7 @@ defmodule Ejabberd.MixProject do
      {:pkix, "~> 1.0"},
      {:stringprep, ">= 1.0.26"},
      {:xmpp, "~> 1.9"},
-     {:yconf, "~> 1.0"}]
+     {:yconf, git: "https://github.com/badlop/yconf.git", ref: "66d5dfbc6cd9080dc066068dc98787440addd32e", override: true}]
     ++ cond_deps()
   end
 
