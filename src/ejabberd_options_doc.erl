@@ -1140,7 +1140,7 @@ doc() ->
       #{value => ?T("Hostname"),
         desc =>
             ?T("A hostname or an IP address of the "
-               "_`database.md#redis|Redis`_ server."
+               "_`database.md#redis|Redis`_ server. "
                "The default is 'localhost'.")}},
      {registration_timeout,
       #{value => "timeout()",
