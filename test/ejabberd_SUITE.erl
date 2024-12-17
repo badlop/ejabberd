@@ -922,7 +922,6 @@ presence_broadcast(Config) ->
 	     sub_els = [#disco_info{node = Node}]} = recv_iq(Config),
     ct:pal("RRECV MESSAGE 1:~n~p", [recv_message(Config)]),
     ct:pal("RRECV MESSAGE 2:~n~p", [recv_message(Config)]),
-    ct:pal("RRECV MESSAGE 3:~n~p", [recv_message(Config)]),
     #presence{from = JID, to = JID} = recv_presence(Config),
     send(Config, #iq{type = result, id = IQ#iq.id,
 		     to = JID, sub_els = [Info]}),
