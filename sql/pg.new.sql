@@ -204,6 +204,7 @@ CREATE TABLE rosterusers (
     askmessage text NOT NULL,
     server character(1) NOT NULL,
     subscribe text NOT NULL,
+    xs text,
     "type" text,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
@@ -211,6 +212,8 @@ CREATE TABLE rosterusers (
 CREATE UNIQUE INDEX i_rosteru_sh_user_jid ON rosterusers USING btree (server_host, username, jid);
 CREATE INDEX i_rosteru_sh_jid ON rosterusers USING btree (server_host, jid);
 
+-- Add support to store roster Xs to a database created before ejabberd xx.xx:
+-- ALTER TABLE rosterusers ADD COLUMN xs text;
 
 CREATE TABLE rostergroups (
     username text NOT NULL,

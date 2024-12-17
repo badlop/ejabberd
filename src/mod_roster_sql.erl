@@ -39,7 +39,7 @@
 -include("mod_roster.hrl").
 -include("ejabberd_sql_pt.hrl").
 -include("logger.hrl").
--include_lib("xmpp/include/jid.hrl").
+-include_lib("xmpp/include/xmpp.hrl").
 
 %%%===================================================================
 %%% API
@@ -50,6 +50,53 @@ init(Host, _Opts) ->
 
 sql_schemas() ->
     [#sql_schema{
+        version = 2,
+        tables =
+            [#sql_table{
+                name = <<"rosterusers">>,
+                columns =
+                    [#sql_column{name = <<"username">>, type = text},
+                     #sql_column{name = <<"server_host">>, type = text},
+                     #sql_column{name = <<"jid">>, type = text},
+                     #sql_column{name = <<"nick">>, type = text},
+                     #sql_column{name = <<"subscription">>, type = {char, 1}},
+                     #sql_column{name = <<"ask">>, type = {char, 1}},
+                     #sql_column{name = <<"askmessage">>, type = text},
+                     #sql_column{name = <<"server">>, type = {char, 1}},
+                     #sql_column{name = <<"subscribe">>, type = text},
+                     #sql_column{name = <<"xs">>, type = text},
+                     #sql_column{name = <<"type">>, type = text},
+                     #sql_column{name = <<"created_at">>, type = timestamp,
+                                 default = true}],
+                indices = [#sql_index{
+                              columns = [<<"server_host">>, <<"username">>,
+                                         <<"jid">>],
+                              unique = true},
+                           #sql_index{
+                              columns = [<<"server_host">>, <<"jid">>]}]},
+             #sql_table{
+                name = <<"rostergroups">>,
+                columns =
+                    [#sql_column{name = <<"username">>, type = text},
+                     #sql_column{name = <<"server_host">>, type = text},
+                     #sql_column{name = <<"jid">>, type = text},
+                     #sql_column{name = <<"grp">>, type = text}],
+                indices = [#sql_index{
+                              columns = [<<"server_host">>, <<"username">>,
+                                         <<"jid">>]}]},
+             #sql_table{
+                name = <<"roster_version">>,
+                columns =
+                    [#sql_column{name = <<"username">>, type = text},
+                     #sql_column{name = <<"server_host">>, type = text},
+                     #sql_column{name = <<"version">>, type = text}],
+                indices = [#sql_index{
+                              columns = [<<"server_host">>, <<"username">>],
+                              unique = true}]}],
+        update =
+            [{add_column, <<"rosterusers">>, <<"xs">>}]
+       },
+     #sql_schema{
         version = 1,
         tables =
             [#sql_table{
@@ -117,7 +164,7 @@ get_roster(LUser, LServer) ->
 	   LServer,
 	   ?SQL("select @(username)s, @(jid)s, @(nick)s, @(subscription)s, "
 		"@(ask)s, @(askmessage)s, @(server)s, @(subscribe)s, "
-		"@(type)s from rosterusers "
+		"@(xs)s, @(type)s from rosterusers "
                 "where username=%(LUser)s and %(LServer)H")) of
         {selected, Items} when is_list(Items) ->
             JIDGroups = case get_roster_jid_groups(LServer, LUser) of
@@ -278,7 +325,7 @@ get_roster_groups(LServer, LUser, SJID) ->
       ?SQL("select @(grp)s from rostergroups"
            " where username=%(LUser)s and %(LServer)H and jid=%(SJID)s")).
 
-roster_subscribe({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage}) ->
+roster_subscribe({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage, Xs}) ->
     ?SQL_UPSERT_T(
        "rosterusers",
        ["!username=%(LUser)s",
@@ -290,13 +337,14 @@ roster_subscribe({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage}) 
         "askmessage=%(AskMessage)s",
         "server='N'",
         "subscribe=''",
+        "xs=%(Xs)s",
         "type='item'"]).
 
 get_roster_by_jid(LServer, LUser, SJID) ->
     ejabberd_sql:sql_query_t(
       ?SQL("select @(username)s, @(jid)s, @(nick)s, @(subscription)s,"
            " @(ask)s, @(askmessage)s, @(server)s, @(subscribe)s,"
-           " @(type)s from rosterusers"
+           " @(xs)s, @(type)s from rosterusers"
            " where username=%(LUser)s and %(LServer)H and jid=%(SJID)s")).
 
 get_rostergroup_by_jid(LServer, LUser, SJID) ->
@@ -311,7 +359,7 @@ get_subscription(LServer, LUser, SJID) ->
       ?SQL("select @(subscription)s, @(ask)s from rosterusers "
            "where username=%(LUser)s and %(LServer)H and jid=%(SJID)s")).
 
-update_roster_sql({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage},
+update_roster_sql({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage, Xs},
 		  ItemGroups) ->
     [?SQL("delete from rosterusers where"
           " username=%(LUser)s and %(LServer)H and jid=%(SJID)s;"),
@@ -326,6 +374,7 @@ update_roster_sql({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage},
          "askmessage=%(AskMessage)s",
          "server='N'",
          "subscribe=''",
+         "xs=%(Xs)s",
          "type='item'"]),
      ?SQL("delete from rostergroups where"
           " username=%(LUser)s and %(LServer)H and jid=%(SJID)s;")]
@@ -340,28 +389,34 @@ update_roster_sql({LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage},
 
 raw_to_record(LServer,
 	      [User, LServer, SJID, Nick, SSubscription, SAsk, SAskMessage,
-	       SServer, SSubscribe, SType]) ->
+	       SServer, SSubscribe, Xs, SType]) ->
     raw_to_record(LServer,
                   {User, LServer, SJID, Nick, SSubscription, SAsk, SAskMessage,
-                   SServer, SSubscribe, SType});
+                   SServer, SSubscribe, Xs, SType});
 raw_to_record(LServer,
 	      {User, SJID, Nick, SSubscription, SAsk, SAskMessage,
-	       SServer, SSubscribe, SType}) ->
+	       SServer, SSubscribe, Xs, SType}) ->
     raw_to_record(LServer,
                   {User, LServer, SJID, Nick, SSubscription, SAsk, SAskMessage,
-                   SServer, SSubscribe, SType});
+                   SServer, SSubscribe, Xs, SType});
 raw_to_record(LServer,
 	      {User, LServer, SJID, Nick, SSubscription, SAsk, SAskMessage,
-	       _SServer, _SSubscribe, _SType}) ->
+	       _SServer, _SSubscribe, SXs, _SType}) ->
     try jid:decode(SJID) of
       JID ->
 	  LJID = jid:tolower(JID),
 	  Subscription = decode_subscription(User, LServer, SSubscription),
 	  Ask = decode_ask(User, LServer, SAsk),
+          Xs = case SXs of
+                   <<>> ->
+                       [];
+                   _ ->
+                       (fxml_stream:parse_element(SXs))#xmlel.children
+               end,
 	  #roster{usj = {User, LServer, LJID},
 		  us = {User, LServer}, jid = LJID, name = Nick,
 		  subscription = Subscription, ask = Ask,
-		  askmessage = SAskMessage}
+		  askmessage = SAskMessage, xs = Xs}
     catch _:{bad_jid, _} ->
 	    ?ERROR_MSG("~ts", [format_row_error(User, LServer, {jid, SJID})]),
 	    error
@@ -370,7 +425,7 @@ raw_to_record(LServer,
 record_to_row(
   #roster{us = {LUser, LServer},
           jid = JID, name = Name, subscription = Subscription,
-          ask = Ask, askmessage = AskMessage}) ->
+          ask = Ask, askmessage = AskMessage, xs = Xs}) ->
     SJID = jid:encode(jid:tolower(JID)),
     SSubscription = case Subscription of
 		      both -> <<"B">>;
@@ -386,7 +441,14 @@ record_to_row(
 	     in -> <<"I">>;
 	     none -> <<"N">>
 	   end,
-    {LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage}.
+    SXs = case Xs of
+              [] ->
+                  <<"">>;
+              [_ | _] ->
+                  XsElement = #xmlel{name = <<"xs">>, children = Xs},
+                  fxml:element_to_binary(xmpp:encode(XsElement))
+          end,
+    {LUser, LServer, SJID, Name, SSubscription, SAsk, AskMessage, SXs}.
 
 decode_subscription(User, Server, S) ->
     case S of

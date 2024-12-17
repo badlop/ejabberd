@@ -46,12 +46,16 @@ CREATE TABLE rosterusers (
     askmessage text NOT NULL,
     server character(1) NOT NULL,
     subscribe text NOT NULL,
+    xs text,
     type text,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE UNIQUE INDEX i_rosteru_user_jid ON rosterusers(username(75), jid(75));
 CREATE INDEX i_rosteru_jid ON rosterusers(jid);
+
+-- Add support to store roster Xs to a database created before ejabberd xx.xx:
+-- ALTER TABLE rosterusers ADD COLUMN xs text;
 
 CREATE TABLE rostergroups (
     username varchar(191) NOT NULL,
