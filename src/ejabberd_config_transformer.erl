@@ -133,7 +133,7 @@ transform(Host, define_macro, Macro, Acc) when is_binary(Host) ->
 		 "Consequently those macro definitions for host '~ts' are unused: ~ts",
 		 [Host, io_lib:format("~p", [Macro])]),
     {true, Acc};
-transform(Host, Opt, Val, Acc) ->
+transform(_Host, _Opt, _Val, Acc) ->
     {true, Acc}.
 
 update(Y, Acc) ->
