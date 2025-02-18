@@ -189,6 +189,10 @@ jobs:
         NODENAME=$DATE@$GITHUB_RUN_NUMBER-$GITHUB_ACTOR-$REF_NAME-$COMMIT
         LABEL=`git show -s --format=%s | cut -c 1-30`
         ./rebar3 ct --name $NODENAME --label "$LABEL"
+
+    - name: Run cover
+      if: (steps.ct.outcome != 'skipped') && (matrix.otp != '28.0-rc1')
+      run: |
         ./rebar3 cover
 
     - name: Check results
