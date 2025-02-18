@@ -452,6 +452,23 @@ t_from_form(Spec) ->
                erl_types:var_table__new(), erl_types:cache__new()),
     T.
 
+t_remote(Mod, acl) ->
+    erl_types:t_any();
+t_remote(Mod, ip4_address) ->
+    erl_types:t_tuple();
+t_remote(Mod, ip6_address) ->
+    erl_types:t_tuple();
+t_remote(Mod, ip_address) ->
+    erl_types:t_tuple();
+t_remote(Mod, jid) ->
+    erl_types:t_tuple();
+t_remote(Mod, re_mp) ->
+    erl_types:t_tuple();
+t_remote(Mod, shaper_rule) ->
+    erl_types:t_tuple();
+t_remote(Mod, uri) ->
+    erl_types:t_tuple();
+
 t_remote(Mod, Type) ->
     D = maps:from_list([{{opaque, Type, []},
                          {{Mod, 1, 2, []}, type}}]),
