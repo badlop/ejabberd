@@ -114,7 +114,7 @@ jobs:
           ~/.cache/rebar3/
         key: ${{matrix.otp}}-${{hashFiles('rebar.config')}}
 
-    - name: Get compatible Rebar binaries
+    - name: Get old eredis for old Erlang
       if: matrix.otp < 21
       run: ./rebar3 unlock eredis
 
