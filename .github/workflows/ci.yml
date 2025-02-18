@@ -178,6 +178,11 @@ jobs:
         cat $RE/logs/ejabberd.log
         grep -q "is stopped in" $RE/logs/ejabberd.log
 
+    - name: Disable cover for Erlang 28
+      if: matrix.otp == '28.0-rc1'
+      run: |
+        sed -i -e 's/cover_enabled, true/cover_enabled, false/' rebar.config
+
     - name: Run tests
       id: ct
       run: |
