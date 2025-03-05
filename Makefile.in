@@ -661,6 +661,9 @@ test:
 	@cd priv && ln -sf ../sql
 	$(REBAR) $(SKIPDEPS) ct
 
+adhoc:
+	CT_BACKENDS=mnesia rebar3 ct --suite=test/ejabberd_SUITE --group=commands_single
+
 test-eunit:
 	$(REBAR) $(SKIPDEPS) eunit --verbose
 
