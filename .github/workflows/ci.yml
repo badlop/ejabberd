@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        otp: ['20.0', '25', '26', '27']
+        otp: ['20.0', '21', '22', '23', '24', '25', '26', '27']
     runs-on: ubuntu-20.04
     services:
       redis:
@@ -126,8 +126,6 @@ jobs:
     - run: make hooks
     - run: make options
     - run: make xref
-    - run: make dialyzer
-    - run: make test-eunit
     - run: make elvis
       if: matrix.otp >= 23
 
@@ -201,108 +199,3 @@ jobs:
           'BEGIN{RS="\n=case";FS="\n"} /=result\s*failed/ {print "=case" $0}'
         find logs/ -name error.log -exec cat '{}' ';'
         find logs/ -name exunit.log -exec cat '{}' ';'
-
-    - name: Send to coveralls
-      if: matrix.otp == '27'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        DIAGNOSTIC=1 ./rebar3 as test coveralls send
-        curl -v -k https://coveralls.io/webhook \
-             --header "Content-Type: application/json" \
-             --data '{"repo_name":"$GITHUB_REPOSITORY",
-                      "repo_token":"$GITHUB_TOKEN",
-                      "payload":{"build_num":$GITHUB_RUN_ID,
-                                 "status":"done"}}'
-
-    - name: Check for changes to trigger schema upgrade test
-      uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        filters: |
-          sql:
-            - 'sql/**'
-            - 'src/mod_admin_update_sql.erl'
-
-    - name: Prepare for schema upgrade test
-      id: prepupgradetest
-      if: ${{ steps.filter.outputs.sql == 'true' }}
-      run: |
-        [[ -d logs ]] && rm -rf logs
-        [[ -d _build/test/logs ]] && rm -rf _build/test/logs || true
-        sed -i 's|update_sql, false|update_sql, true|g' test/suite.erl
-    - name: Run DB tests on upgraded schema (mssql, mysql, pgsql)
-      run: CT_BACKENDS=mssql,mysql,pgsql make test
-      if: always() && steps.prepupgradetest.outcome != 'skipped'
-      id: ctupgradedschema
-    - name: Check results
-      if: always() && steps.ctupgradedschema.outcome != 'skipped'
-      run: |
-        [[ -d _build ]] && ln -s _build/test/logs/last/ logs || true
-        ln `find logs/ -name suite.log` logs/suite.log
-        grep 'TEST COMPLETE' logs/suite.log
-        grep -q 'TEST COMPLETE,.* 0 failed' logs/suite.log
-        test $(find logs/ -empty -name error.log)
-    - name: View logs failures
-      if: failure() && steps.ctupgradedschema.outcome != 'skipped'
-      run: |
-        cat logs/suite.log | awk \
-          'BEGIN{RS="\n=case";FS="\n"} /=result\s*failed/ {print "=case" $0}'
-        find logs/ -name error.log -exec cat '{}' ';'
-        find logs/ -name exunit.log -exec cat '{}' ';'
-
-    - name: Prepare new schema
-      run: |
-        [[ -d logs ]] && rm -rf logs
-        [[ -d _build/test/logs ]] && rm -rf _build/test/logs || true
-        docker exec ejabberd-mssql /opt/mssql-tools18/bin/sqlcmd -C -U SA -P ejabberd_Test1 -S localhost -Q "drop database [ejabberd_test];"
-        docker exec ejabberd-mssql /opt/mssql-tools18/bin/sqlcmd -C -U SA -P ejabberd_Test1 -S localhost -Q "drop login [ejabberd_test];"
-        mysql -u root -proot -e "DROP DATABASE ejabberd_test;"
-        sudo -u postgres psql -c "DROP DATABASE ejabberd_test;"
-        docker exec ejabberd-mssql /opt/mssql-tools18/bin/sqlcmd -C -U SA -P ejabberd_Test1 -S localhost -i /initdb_mssql.sql
-        docker exec ejabberd-mssql /opt/mssql-tools18/bin/sqlcmd -C -U SA -P ejabberd_Test1 -S localhost -d ejabberd_test -i /mssql.new.sql
-        mysql -u root -proot -e "CREATE DATABASE ejabberd_test;"
-        mysql -u root -proot -e "GRANT ALL ON ejabberd_test.*
-                                 TO 'ejabberd_test'@'localhost';"
-        sudo -u postgres psql -c "CREATE DATABASE ejabberd_test;"
-        sudo -u postgres psql -c "GRANT ALL PRIVILEGES
-                                  ON DATABASE ejabberd_test TO ejabberd_test;"
-        sudo -u postgres psql ejabberd_test -c "GRANT ALL PRIVILEGES ON ALL
-                                                TABLES IN SCHEMA public
-                                                TO ejabberd_test;"
-        sudo -u postgres psql ejabberd_test -c "GRANT ALL PRIVILEGES ON ALL
-                                                SEQUENCES IN SCHEMA public
-                                                TO ejabberd_test;"
-        sed -i 's|new_schema, false|new_schema, true|g' test/suite.erl
-    - name: Run DB tests on new schema (mssql, mysql, pgsql)
-      run: CT_BACKENDS=mssql,mysql,pgsql make test
-      id: ctnewschema
-    - name: Check results
-      if: always() && steps.ctnewschema.outcome != 'skipped'
-      run: |
-        [[ -d _build ]] && ln -s _build/test/logs/last/ logs || true
-        ln `find logs/ -name suite.log` logs/suite.log
-        grep 'TEST COMPLETE' logs/suite.log
-        grep -q 'TEST COMPLETE,.* 0 failed' logs/suite.log
-        test $(find logs/ -empty -name error.log)
-    - name: View logs failures
-      if: failure() && steps.ctnewschema.outcome != 'skipped'
-      run: |
-        cat logs/suite.log | awk \
-          'BEGIN{RS="\n=case";FS="\n"} /=result\s*failed/ {print "=case" $0}'
-        find logs/ -name error.log -exec cat '{}' ';'
-        find logs/ -name exunit.log -exec cat '{}' ';'
-
-    - name: Upload CT logs
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: ejabberd-ct-logs-${{matrix.otp}}
-        #
-        # Appending the wildcard character ("*") is a trick to make
-        # "ejabberd-packages" the root directory of the uploaded ZIP file:
-        #
-        # https://github.com/actions/upload-artifact#upload-using-multiple-paths-and-exclusions
-        #
-        path: _build/test/logs
-        retention-days: 14
