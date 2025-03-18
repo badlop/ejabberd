@@ -267,9 +267,8 @@ defmodule Ejabberd.MixProject do
       ejabberd: [
         include_executables_for: [:unix],
         # applications: [runtime_tools: :permanent]
-        strip_beams: Mix.env() != :dev,
         steps: [&copy_extra_files/1, :assemble | maybe_tar]
-      ]
+      ] ++ if_version_above(~c"20", [strip_beams: Mix.env() != :dev])
     ]
   end
 
