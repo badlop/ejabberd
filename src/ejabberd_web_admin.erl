@@ -1673,8 +1673,9 @@ make_login_items(#request{us = {Username, Host}} = R, Level) ->
                                 R,
                                 [{<<"sentence">>, misc:atom_to_binary(node())}],
                                 [{only, value},
-                                 {result_links, [{sentence, node, Level, <<"">>}]}])]),
-              ?LI([?C(unicode:characters_to_binary("📤")),
+                                 {result_links, [{sentence, node, Level, <<"">>}]}])])] ++
+             ejabberd_hooks:run_fold(webadmin_menu_system, [], [R]) ++
+             [?LI([?C(unicode:characters_to_binary("📤")),
                    ?AC(<<(binary:copy(<<"../">>, Level))/binary, "logout/">>,
                        <<"Logout">>)])])]}]}].
 
