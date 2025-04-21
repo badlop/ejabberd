@@ -85,6 +85,18 @@ defmodule Ejabberd.MixProject do
     result = [{:d, :ELIXIR_ENABLED}] ++
              cond_options() ++
              Enum.map(includes, fn (path) -> {:i, path} end) ++
+             if_version_above(~c"20", [{:d, :DEPRECATED_GET_STACKTRACE}]) ++
+             if_version_above(~c"20", [{:d, :HAVE_URI_STRING}]) ++
+             if_version_above(~c"20", [{:d, :HAVE_ERL_ERROR}]) ++
+             if_version_below(~c"21", [{:d, :USE_OLD_HTTP_URI}]) ++
+             if_version_below(~c"22", [{:d, :LAGER}]) ++
+             if_version_below(~c"21", [{:d, :NO_CUSTOMIZE_HOSTNAME_CHECK}]) ++
+             if_version_below(~c"23", [{:d, :USE_OLD_CRYPTO_HMAC}]) ++
+             if_version_below(~c"23", [{:d, :USE_OLD_PG2}]) ++
+             if_version_below(~c"24", [{:d, :COMPILER_REPORTS_ONLY_LINES}]) ++
+             if_version_below(~c"24", [{:d, :SYSTOOLS_APP_DEF_WITHOUT_OPTIONAL}]) ++
+             if_version_below(~c"24", [{:d, :OTP_BELOW_24}]) ++
+             if_version_below(~c"25", [{:d, :OTP_BELOW_25}]) ++
              if_version_below(~c"26", [{:d, :OTP_BELOW_26}]) ++
              if_version_below(~c"27", [{:d, :OTP_BELOW_27}]) ++
              if_version_below(~c"28", [{:d, :OTP_BELOW_28}])
@@ -143,7 +155,10 @@ defmodule Ejabberd.MixProject do
                          {config(:redis), {:eredis, "~> 1.7.1"}},
                          {config(:sip), {:esip, "~> 1.0"}},
                          {config(:zlib), {:ezlib, "~> 1.0"}},
+                         {if_version_above(~c"23", true), {:jose, "~> 1.11.10"}},
+                         {if_version_below(~c"24", true), {:jose, "1.11.1", override: true}},
                          {if_version_below(~c"27", true), {:jiffy, "~> 1.1.1"}},
+                         {if_version_below(~c"22", true), {:lager, "~> 3.9.1"}},
                          {config(:lua), {:luerl, "~> 1.2.0"}},
                          {config(:mysql), {:p1_mysql, ">= 1.0.24"}},
                          {config(:pgsql), {:p1_pgsql, ">= 1.1.32"}},
@@ -167,6 +182,7 @@ defmodule Ejabberd.MixProject do
                          {config(:redis), :eredis},
                          {Mix.env() == :edoc, :ex_doc},
                          {Mix.env() == :test, :dialyxir},
+                         {if_version_below(~c"22", true), :lager},
                          {config(:mysql), :p1_mysql},
                          {config(:sip), :esip},
                          {config(:odbc), :odbc},
@@ -230,9 +246,10 @@ defmodule Ejabberd.MixProject do
             IO.puts("ERROR: To build releases, Elixir 1.10.0 or higher is required.")
           _ -> :ok
         end
-        case Version.match?(System.version(), "< 1.11.4") do
+        case Version.match?(System.version(), "< 1.11.4")
+          and :erlang.system_info(:otp_release) > ~c"23" do
           true ->
-            IO.puts("ERROR: To build releases with Elixir, version 1.11.4 or higher is required.")
+            IO.puts("ERROR: To build releases with Elixir lower than 1.11.4, Erlang/OTP lower than 24 is required.")
           _ -> :ok
         end
         "~> 1.10"
