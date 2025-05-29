@@ -151,6 +151,8 @@ defmodule Ejabberd.MixProject do
                          {Mix.env() == :translations,
                           {:ejabberd_po, git: "https://github.com/processone/ejabberd-po.git"}},
                          {Mix.env() == :dev,
+                          {:wobserver_ng, "~> 1.14"}},
+                         {Mix.env() == :dev,
                           {:exsync, "~> 0.2", optional: true, runtime: false}},
                          {config(:redis), {:eredis, "~> 1.7.1"}},
                          {config(:sip), {:esip, "~> 1.0"}},
