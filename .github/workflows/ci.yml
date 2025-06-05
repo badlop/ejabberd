@@ -113,7 +113,8 @@ jobs:
                     --disable-odbc
         make
 
-    - run: make format
+    - run: cat Makefile
+    - run: tools/rebar3-format.sh ./rebar3
     - run: ./rebar3
     - run: git config --global --add safe.directory /__w/ejabberd/ejabberd
       if: matrix.otp == 27 && github.event_name == 'push'
