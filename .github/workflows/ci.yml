@@ -113,6 +113,16 @@ jobs:
                     --disable-odbc
         make
 
+    - run: make format
+    - run: git config --global --add safe.directory /__w/ejabberd/ejabberd
+      if: matrix.otp == 27 && github.event_name == 'push'
+    - uses: stefanzweifel/git-auto-commit-action@v5
+      if: matrix.otp == 27 && github.event_name == 'push'
+      with:
+        add_options: '-u'
+        file_pattern: 'src/*.erl test/*.erl'
+        commit_message: Automatic changes running "make format"
+
     - run: make install -s
     - run: make hooks
     - run: make options
