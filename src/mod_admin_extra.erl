@@ -1936,25 +1936,24 @@ to_list(E) when is_binary(E) -> binary_to_list(E).
 %% @format-begin
 
 srg_set_info(Group, Host, Key, Value) ->
-    Opts = case mod_shared_roster:get_group_opts(Host,
-                                                
-                                                 Group) of
+    Opts =
+        case mod_shared_roster:get_group_opts(Host, Group) of
             Os when is_list(Os) ->
                 Os;
             error ->
                 []
         end,
-Opts2 = srg_set_info(Key, Value, Opts),
-case mod_shared_roster:set_group_opts(Host, Group, Opts2) of
-{atomic, ok} ->
-ok;
-Problem ->
+    Opts2 = srg_set_info(Key, Value, Opts),
+    case mod_shared_roster:set_group_opts(Host, Group, Opts2) of
+        {atomic, ok} ->
+            ok;
+        Problem ->
             ?INFO_MSG("Problem: ~n  ~p", [Problem]), %+++
             error
     end.
 
 srg_set_info(<<"description">>, Value, Opts) ->
-[{description, Value} | proplists:delete(description, Opts)];
+    [{description, Value} | proplists:delete(description, Opts)];
 srg_set_info(<<"label">>, Value, Opts) ->
     [{label, Value} | proplists:delete(label, Opts)];
 srg_set_info(<<"all_users">>, <<"true">>, Opts) ->
