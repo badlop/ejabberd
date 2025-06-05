@@ -25,6 +25,7 @@ EFMTS2=""
 for EFMT in $EFMTS; do
     EFMTS2="$EFMTS2 --files $EFMT"
 done
+echo "Now I will call $REBAR format $EFMTS2..."
 $REBAR format $EFMTS2
 
 for ERL in $ERLS; do
