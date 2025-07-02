@@ -835,7 +835,7 @@ doc() ->
 -spec validator() -> econf:validator().
 validator() ->
     Disallowed = ejabberd_config:globals(),
-    {Validators, Required} = ejabberd_config:validators(Disallowed),
+    {Validators, Required} = ejabberd_config:validators(Disallowed, toplevel),
     econf:and_then(
       fun econf:group_dups/1,
       econf:options(
