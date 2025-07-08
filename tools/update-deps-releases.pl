@@ -337,8 +337,8 @@ sub git_tag {
 
 sub git_push {
     my ($dep) = @_;
-    system("git", "-C", ".deps-update/$dep", "push");
-    system("git", "-C", ".deps-update/$dep", "push", "--tags");
+    system("git", "-C", ".deps-update/$dep", "puh");
+    system("git", "-C", ".deps-update/$dep", "puh", "--tags");
 }
 
 sub check_hex_files {
@@ -533,7 +533,7 @@ while (1) {
                     }
                 }
             }
-            my $cmd = show_commands(A => "Apply", (%to_tag ? (U => "Update Changelogs") : ()), E => "Exit");
+            my $cmd = show_commands(A => "Apply (git push)", (%to_tag ? (U => "Update Changelogs") : ()), E => "Exit");
             if ($cmd eq "U") {
                 for my $dep (keys %to_tag) {
                     edit_changelog($dep, $to_tag{$dep});
