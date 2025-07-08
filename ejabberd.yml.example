@@ -163,6 +163,8 @@ shaper_rules:
   s2s_shaper: fast
 
 modules:
+  mod_antispam: {}
+  mod_pubsub_serverinfo: {}
   mod_adhoc: {}
   mod_adhoc_api: {}
   mod_admin_extra: {}
