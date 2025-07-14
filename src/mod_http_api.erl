@@ -399,10 +399,10 @@ format_arg(Elements, {list, ElementsDef})
 
 format_arg(Arg, integer) when is_integer(Arg) -> Arg;
 format_arg(Arg, integer) when is_binary(Arg) -> binary_to_integer(Arg);
-format_arg(Arg, binary) when is_list(Arg) -> process_unicode_codepoints(Arg);
-format_arg(Arg, binary) when is_binary(Arg) -> Arg;
-format_arg(Arg, string) when is_list(Arg) -> Arg;
-format_arg(Arg, string) when is_binary(Arg) -> binary_to_list(Arg);
+format_arg(Arg, binary) when is_list(Arg) -> unescape_binary(process_unicode_codepoints(Arg));
+format_arg(Arg, binary) when is_binary(Arg) -> unescape_binary(Arg);
+format_arg(Arg, string) when is_list(Arg) -> unescape_string(Arg);
+format_arg(Arg, string) when is_binary(Arg) -> unescape_string(binary_to_list(Arg));
 format_arg(undefined, binary) -> <<>>;
 format_arg(undefined, string) -> "";
 format_arg(Arg, Format) ->
@@ -415,6 +415,12 @@ process_unicode_codepoints(Str) ->
     iolist_to_binary(lists:map(fun(X) when X > 255 -> unicode:characters_to_binary([X]);
                                   (Y) -> Y
                                end, Str)).
+
+unescape_binary(BinOrString) ->
+    iolist_to_binary(string:replace(BinOrString, "\\n", "\n", all)).
+
+unescape_string(BinOrString) ->
+    lists:flatten(string:replace(BinOrString, "\\n", "\n", all)).
 
 %% ----------------
 %% internal helpers

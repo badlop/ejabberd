@@ -388,7 +388,8 @@ format_args(Args, ArgsFormat) ->
 
 format_arg(Arg, integer) ->
     format_arg2(Arg, "~d");
-format_arg(Arg, binary) ->
+format_arg(ArgEscaped, binary) ->
+    Arg = string:replace(ArgEscaped, "\\n", "\n", all),
     unicode:characters_to_binary(Arg, utf8);
 format_arg("", string) ->
     "";
