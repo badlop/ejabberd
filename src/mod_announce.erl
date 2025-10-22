@@ -114,8 +114,8 @@ stop(Host) ->
         true ->
             ok
     end,
-    ejabberd_hooks:delete(webadmin_menu_hostuser, Host, ?MODULE, webadmin_menu_hostuser, 50),
-    ejabberd_hooks:delete(webadmin_page_hostuser, Host, ?MODULE, webadmin_page_hostuser, 50),
+    ejabberd_hooks:delete(webadmin_menu_host, Host, ?MODULE, webadmin_menu, 50),
+    ejabberd_hooks:delete(webadmin_page_host, Host, ?MODULE, webadmin_page, 50),
     gen_mod:stop_child(?MODULE, Host).
 
 reload(Host, NewOpts, OldOpts) ->
