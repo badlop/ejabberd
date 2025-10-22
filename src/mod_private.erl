@@ -40,7 +40,16 @@
 	 pubsub_delete_item/5, pubsub_tree_call/4,
 	 del_data/3, get_users_with_data/2, count_users_with_data/2]).
 
--export([get_commands_spec/0, bookmarks_to_pep/2]).
+-export([get_commands_spec/0,
+         private_get/4, % deprecated, use private_get_ns instead
+         private_get_ns/3,
+         private_get_all/2,
+         private_set/3,
+         bookmarks_to_pep/2]).
+
+%% Used by get_ban_details
+-export([private_get2/3,
+         private_set2/3]).
 
 -export([webadmin_menu_hostuser/4, webadmin_page_hostuser/4]).
 
@@ -543,18 +552,118 @@ pubsub_item_to_map(_, Map) ->
 %%%===================================================================
 %%% Commands
 %%%===================================================================
+
+%% @format-begin
+
 -spec get_commands_spec() -> [ejabberd_commands()].
 get_commands_spec() ->
-    [#ejabberd_commands{name = bookmarks_to_pep, tags = [private],
-			desc = "Export private XML storage bookmarks to PEP",
-			module = ?MODULE, function = bookmarks_to_pep,
-			args = [{user, binary}, {host, binary}],
-			args_rename = [{server, host}],
-			args_desc = ["Username", "Server"],
-			args_example = [<<"bob">>, <<"example.com">>],
-			result = {res, restuple},
-			result_desc = "Result tuple",
-			result_example = {ok, <<"Bookmarks exported">>}}].
+    [#ejabberd_commands{name = private_get,
+                        tags = [private],
+                        desc = "Get some information from a user private storage (deprecated)",
+                        longdesc = "This is deprecated, please use _`private_get_ns`_ API.",
+                        module = ?MODULE,
+                        function = private_get,
+                        args = [{user, binary}, {host, binary}, {element, binary}, {ns, binary}],
+                        args_example =
+                            [<<"user1">>,
+                             <<"myserver.com">>,
+                             <<"storage">>,
+                             <<"storage:rosternotes">>],
+                        args_desc = ["User name", "Server name", "Element name", "Namespace"],
+                        result = {res, string}},
+     #ejabberd_commands{name = private_get_ns,
+                        tags = [private],
+                        desc = "Get some information from a user private storage",
+                        note = "added in 25.xx",
+                        module = ?MODULE,
+                        function = private_get_ns,
+                        args = [{user, binary}, {host, binary}, {ns, binary}],
+                        args_example = [<<"user1">>, <<"myserver.com">>, <<"storage:rosternotes">>],
+                        args_desc = ["User name", "Server name", "Namespace"],
+                        result = {res, string}},
+     #ejabberd_commands{name = private_get_all,
+                        tags = [private],
+                        desc = "Get all information from a user private storage",
+                        note = "added in 25.xx",
+                        module = ?MODULE,
+                        function = private_get_all,
+                        args = [{user, binary}, {host, binary}],
+                        args_example = [<<"user1">>, <<"myserver.com">>],
+                        args_desc = ["User name", "Server name"],
+                        result = {res, string}},
+     #ejabberd_commands{name = private_set,
+                        tags = [private],
+                        desc = "Set to the user private storage",
+                        module = ?MODULE,
+                        function = private_set,
+                        args = [{user, binary}, {host, binary}, {element, binary}],
+                        args_example =
+                            [<<"user1">>,
+                             <<"myserver.com">>,
+                             <<"<storage xmlns='storage:rosternotes'/>">>],
+                        args_desc = ["User name", "Server name", "XML storage element"],
+                        result = {res, rescode}},
+     #ejabberd_commands{name = bookmarks_to_pep,
+                        tags = [private],
+                        desc = "Export private XML storage bookmarks to PEP",
+                        module = ?MODULE,
+                        function = bookmarks_to_pep,
+                        args = [{user, binary}, {host, binary}],
+                        args_rename = [{server, host}],
+                        args_desc = ["Username", "Server"],
+                        args_example = [<<"bob">>, <<"example.com">>],
+                        result = {res, restuple},
+                        result_desc = "Result tuple",
+                        result_example = {ok, <<"Bookmarks exported">>}}].
+
+%% Example usage:
+%% $ ejabberdctl private_set badlop localhost "\<aa\ xmlns=\'bb\'\>Cluth\</aa\>"
+%% $ ejabberdctl private_get badlop localhost aa bb
+%% <aa xmlns='bb'>Cluth</aa>
+
+private_get(Username, Host, _Element, Ns) ->
+    private_get_ns(Username, Host, Ns).
+
+private_get_ns(Username, Host, Ns) ->
+    Els = private_get2(Username, Host, Ns),
+    binary_to_list(ejabberd_web_admin:pretty_print_xml(
+                       xmpp:encode(#private{sub_els = Els}))).
+
+private_get2(Username, Host, Ns) ->
+    case gen_mod:is_loaded(Host, mod_private) of
+        true ->
+            private_get3(Username, Host, Ns);
+        false ->
+            []
+    end.
+
+private_get3(Username, Host, Ns) ->
+    Element = <<"unknown_element">>,
+    ElementXml = #xmlel{name = Element, attrs = [{<<"xmlns">>, Ns}]},
+    mod_private:get_data(
+        jid:nodeprep(Username), jid:nameprep(Host), [{Ns, ElementXml}]).
+
+private_get_all(Username, Host) ->
+    Els = mod_private:get_data(
+              jid:nodeprep(Username), jid:nameprep(Host)),
+    binary_to_list(ejabberd_web_admin:pretty_print_xml(
+                       xmpp:encode(#private{sub_els = Els}))).
+
+private_set(Username, Host, ElementString) ->
+    case fxml_stream:parse_element(ElementString) of
+        {error, Error} ->
+            io:format("Error found parsing the element:~n  ~p~nError: ~p~n",
+                      [ElementString, Error]),
+            error;
+        Xml ->
+            private_set2(Username, Host, Xml)
+    end.
+
+private_set2(Username, Host, Xml) ->
+    NS = fxml:get_tag_attr_s(<<"xmlns">>, Xml),
+    JID = jid:make(Username, Host),
+    mod_private:set_data(JID, [{NS, Xml}]).
+%% @format-end
 
 -spec bookmarks_to_pep(binary(), binary())
       -> {ok, binary()} | {error, binary()}.
@@ -600,10 +709,13 @@ webadmin_menu_hostuser(Acc, _Host, _Username, _Lang) ->
 
 webadmin_page_hostuser(_, Host, User,
 	      #request{path = [<<"private">>]} = R) ->
-    Res = ?H1GL(<<"Private XML Storage">>, <<"modules/#mod_private">>, <<"mod_private">>)
-          ++ [make_command(private_set, R, [{<<"user">>, User}, {<<"host">>, Host}], []),
-              make_command(private_get, R, [{<<"user">>, User}, {<<"host">>, Host}], [])],
-    {stop, Res};
+    Head = ?H1GL(<<"Private XML Storage">>, <<"modules/#mod_private">>, <<"mod_private">>),
+    Set = [make_command(private_set, R, [{<<"user">>, User}, {<<"host">>, Host}], [])],
+    Get = [make_command(private_get_ns, R, [{<<"user">>, User}, {<<"host">>, Host}],
+                           [{result_links, [{res, paragraph, 1, <<"">>}]}]),
+           make_command(private_get_all, R, [{<<"user">>, User}, {<<"host">>, Host}],
+                           [{result_links, [{res, paragraph, 1, <<"">>}]}])],
+    {stop, Head ++ Set ++ Get};
 webadmin_page_hostuser(Acc, _, _, _) -> Acc.
 
 %%%===================================================================

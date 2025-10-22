@@ -65,9 +65,6 @@
 	 push_roster_all/1, push_alltoall/2,
 	 push_roster_item/5, build_roster_item/3,
 
-	 % Private storage
-	 private_get/4, private_set/3,
-
 	 % Shared roster
 	 srg_create/5, srg_add/2,
 	 srg_delete/2, srg_list/1, srg_get_info/2,
@@ -812,22 +809,6 @@ get_commands_spec() ->
 			args_desc = ["User name", "Server name", "Number of seconds since epoch", "Status message"],
 			result = {res, rescode}},
 
-     #ejabberd_commands{name = private_get, tags = [private],
-			desc = "Get some information from a user private storage",
-			module = ?MODULE, function = private_get,
-			args = [{user, binary}, {host, binary}, {element, binary}, {ns, binary}],
-			args_example = [<<"user1">>,<<"myserver.com">>,<<"storage">>, <<"storage:rosternotes">>],
-			args_desc = ["User name", "Server name", "Element name", "Namespace"],
-			result = {res, string}},
-     #ejabberd_commands{name = private_set, tags = [private],
-			desc = "Set to the user private storage",
-			module = ?MODULE, function = private_set,
-			args = [{user, binary}, {host, binary}, {element, binary}],
-			args_example = [<<"user1">>,<<"myserver.com">>,
-                            <<"<storage xmlns='storage:rosternotes'/>">>],
-			args_desc = ["User name", "Server name", "XML storage element"],
-			result = {res, rescode}},
-
      #ejabberd_commands{name = srg_create, tags = [shared_roster_group],
 			desc = "Create a Shared Roster Group",
 			longdesc = "If you want to specify several group "
@@ -1249,7 +1230,7 @@ ban_account_v2_b(User, Host, ReasonText) ->
     BanDate = xmpp_util:encode_timestamp(erlang:timestamp()),
     Hash = get_hash_value(User, Host),
     BanPrivateXml = build_ban_xmlel(Reason, Last, BanDate, Hash),
-    ok = private_set2(User, Host, BanPrivateXml),
+    ok = mod_private:private_set2(User, Host, BanPrivateXml),
     kick_sessions(User, Host, Reason),
     ok.
 
@@ -1271,7 +1252,7 @@ build_ban_xmlel(Reason, {LastDate, LastReason}, BanDate, Hash) ->
 %% Get ban details
 
 get_ban_details(User, Host) ->
-    case private_get2(User, Host, <<"banned">>, ?NS_BANNED) of
+    case mod_private:private_get2(User, Host, ?NS_BANNED) of
         [El] ->
             get_ban_details(User, Host, El);
         [] ->
@@ -1837,45 +1818,6 @@ set_last(User, Server, Timestamp, Status) ->
         {ok, _} -> ok;
 	Error -> Error
     end.
-
-%%%
-%%% Private Storage
-%%%
-
-%% Example usage:
-%% $ ejabberdctl private_set badlop localhost "\<aa\ xmlns=\'bb\'\>Cluth\</aa\>"
-%% $ ejabberdctl private_get badlop localhost aa bb
-%% <aa xmlns='bb'>Cluth</aa>
-
-private_get(Username, Host, Element, Ns) ->
-    Els = private_get2(Username, Host, Element, Ns),
-    binary_to_list(fxml:element_to_binary(xmpp:encode(#private{sub_els = Els}))).
-
-private_get2(Username, Host, Element, Ns) ->
-    case gen_mod:is_loaded(Host, mod_private) of
-        true -> private_get3(Username, Host, Element, Ns);
-        false -> []
-    end.
-
-private_get3(Username, Host, Element, Ns) ->
-    ElementXml = #xmlel{name = Element, attrs = [{<<"xmlns">>, Ns}]},
-    mod_private:get_data(jid:nodeprep(Username), jid:nameprep(Host),
-			       [{Ns, ElementXml}]).
-
-private_set(Username, Host, ElementString) ->
-    case fxml_stream:parse_element(ElementString) of
-	{error, Error} ->
-	    io:format("Error found parsing the element:~n  ~p~nError: ~p~n",
-		      [ElementString, Error]),
-	    error;
-	Xml ->
-	    private_set2(Username, Host, Xml)
-    end.
-
-private_set2(Username, Host, Xml) ->
-    NS = fxml:get_tag_attr_s(<<"xmlns">>, Xml),
-    JID = jid:make(Username, Host),
-    mod_private:set_data(JID, [{NS, Xml}]).
 
 %%%
 %%% Shared Roster Groups
