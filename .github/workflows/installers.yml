@@ -101,7 +101,7 @@ jobs:
     if: github.ref_type == 'tag'
     steps:
       - name: Download packages
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
       - name: Draft Release
         uses: softprops/action-gh-release@v2
         with:
