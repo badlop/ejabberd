@@ -1,6 +1,10 @@
 name: Weekly
 
 on:
+  push:
+    paths:
+    - '*'
+    - '.github/workflows/weekly.yml'
   schedule:
     - cron: '30 9 * * 0'
 
