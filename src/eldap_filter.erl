@@ -84,15 +84,14 @@ parse(L) ->
                    {error, any()} | {ok, eldap:filter()}.
 
 parse(L, SList) ->
-    case catch eldap_filter_yecc:parse(scan(binary_to_list(L), SList)) of
-        {'EXIT', _} = Err ->
-            {error, Err};
-	{error, {_, _, Msg}} ->
-	    {error, Msg};
+    try eldap_filter_yecc:parse(scan(binary_to_list(L), SList)) of
 	{ok, Result} ->
 	    {ok, Result};
-	{regexp, Err} ->
-	    {error, Err}
+	{error, {_, _, Msg}} ->
+	    {error, Msg}
+    catch
+        _:Err ->
+            {error, {'EXIT', Err}}
     end.
 
 %%====================================================================
