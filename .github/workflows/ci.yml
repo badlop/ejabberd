@@ -37,7 +37,6 @@ jobs:
       with:
         otp-version: ${{ matrix.otp }}
         hexpm-mirrors: |
-          https://cdn.jsdelivr.net/hex
           https://builds.hex.pm
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
@@ -86,7 +85,6 @@ jobs:
       with:
         otp-version: ${{ matrix.otp }}
         hexpm-mirrors: |
-          https://cdn.jsdelivr.net/hex
           https://builds.hex.pm
 
     - uses: actions/download-artifact@v7
@@ -133,7 +131,6 @@ jobs:
       with:
         otp-version: ${{ matrix.otp }}
         hexpm-mirrors: |
-          https://cdn.jsdelivr.net/hex
           https://builds.hex.pm
 
     - uses: awalsh128/cache-apt-pkgs-action@latest
@@ -221,7 +218,6 @@ jobs:
       with:
         otp-version: ${{ matrix.otp }}
         hexpm-mirrors: |
-          https://cdn.jsdelivr.net/hex
           https://builds.hex.pm
 
     - uses: actions/download-artifact@v7
@@ -322,7 +318,6 @@ jobs:
       with:
         otp-version: ${{ matrix.otp }}
         hexpm-mirrors: |
-          https://cdn.jsdelivr.net/hex
           https://builds.hex.pm
 
     - uses: actions/download-artifact@v7
