@@ -65,6 +65,7 @@ listen:
     module: ejabberd_http
     request_handlers:
       /admin: ejabberd_web_admin
+      /invites: mod_invites
       /.well-known/acme-challenge: ejabberd_acme
   -
     port: 5478
@@ -163,6 +164,8 @@ shaper_rules:
   s2s_shaper: fast
 
 modules:
+  mod_invites:
+    landing_page: auto
   mod_adhoc: {}
   mod_adhoc_api: {}
   mod_admin_extra: {}
