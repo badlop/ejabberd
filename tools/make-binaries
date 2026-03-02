@@ -428,14 +428,6 @@ remove_unused_files()
 	# Remove shared object file used only in test suite:
 	find "$code_dir/lib" -name 'otp_test_engine.so' -delete
 
-	# Remove shared object files of statically linked NIFs:
-	find "$code_dir/lib/crypto-"* "$code_dir/lib/asn1-"* \
-	    '(' -name 'asn1rt_nif.so' -o \
-	        -name 'crypto.so' -o \
-	        -name 'lib' -o \
-	        -name 'priv' ')' \
-	    -delete
-
 	# Remove unused ERTS binaries (see systools_make:erts_binary_filter/0):
 	find "$code_dir/erts-"*'/bin' \
 	    '(' -name 'ct_run' -o \
@@ -700,9 +692,8 @@ build_deps()
 	    --with-odbc="$prefix" \
 	    --without-javac \
 	    --disable-dynamic-ssl-lib \
-	    --enable-static-nifs \
 	    CFLAGS="$CFLAGS -Wl,-L$prefix/lib" \
-	    LIBS='-lcrypto -ldl'
+	    LIBS='-ldl'
 	make
 	make install
 	if [ "$mode" = 'native' ]
