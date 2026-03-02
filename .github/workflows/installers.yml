@@ -21,12 +21,10 @@ jobs:
     runs-on: ubuntu-22.04${{ matrix.suffix }}
     strategy:
       matrix:
-        platform: [amd64, arm64]
+        platform: [amd64]
         include:
           - platform: amd64
             suffix:
-          - platform: arm64
-            suffix: -arm
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
