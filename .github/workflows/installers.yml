@@ -49,6 +49,8 @@ jobs:
           echo $HOME/.local/share/gem/ruby/*/bin >> $GITHUB_PATH
       - name: Build binary archives
         run: CHECK_DEPS=false tools/make-binaries
+      - run: git describe --tags
+      - run: git describe
       - name: Build DEB and RPM packages
         run: tools/make-packages
       - name: Build installers
