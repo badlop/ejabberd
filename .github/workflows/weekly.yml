@@ -15,6 +15,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04-arm
     strategy:
+      fail-fast: false
       matrix:
         otp: ['25', '26', '27', '28', '29']
 
