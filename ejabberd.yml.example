@@ -55,10 +55,15 @@ listen:
     request_handlers:
       /admin: ejabberd_web_admin
       /api: mod_http_api
-      /bosh: mod_bosh
+      #/bosh: mod_bosh
       /captcha: ejabberd_captcha
       /upload: mod_http_upload
-      /ws: ejabberd_http_ws
+      #/ws: ejabberd_http_ws
+      /invites: mod_invites
+      /share: mod_http_fileserver
+      /register: mod_register_web
+      /.well-known/host-meta: mod_host_meta
+      /.well-known/host-meta.json: mod_host_meta
   -
     port: 5280
     ip: "::"
@@ -66,6 +71,11 @@ listen:
     request_handlers:
       /admin: ejabberd_web_admin
       /.well-known/acme-challenge: ejabberd_acme
+      /conversejs: mod_conversejs
+      /oauth: ejabberd_oauth
+      /register: mod_register_web
+      /xmlrpc: ejabberd_xmlrpc
+      /ws: ejabberd_http_ws
   -
     port: 5478
     ip: "::"
@@ -81,7 +91,6 @@ listen:
     ip: "::"
     module: mod_mqtt
     backlog: 1000
-
 s2s_use_starttls: optional
 
 acl:
@@ -102,6 +111,8 @@ access_rules:
     allow: admin
   configure:
     allow: admin
+  web_user:
+    allow: all
   muc_create:
     allow: local
   pubsub_createnode:
@@ -243,6 +254,24 @@ modules:
   mod_vcard_xupdate: {}
   mod_version:
     show_os: false
+
+  mod_admin_update_sql: {}
+  mod_antispam: {}
+  mod_conversejs: {}
+  mod_host_meta:
+    bosh_service_url: "https://@HOST@:5443/bosh"
+    websocket_url: "wss://@HOST@:5443/ws"
+  mod_http_fileserver:
+    docroot:
+      /share: /usr/share/javascript
+  mod_invites:
+    access_create_account: all
+    db_type: internal
+    landing_page: auto
+  mod_muc_log:
+    outdir: /tmp/muclogs
+  mod_pubsub_serverinfo: {}
+  mod_register_web: {}
 
 ### Local Variables:
 ### mode: yaml
