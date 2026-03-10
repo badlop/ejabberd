@@ -29,7 +29,7 @@ jobs:
       ImageOS: ubuntu24
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29']
 
     steps:
 
@@ -80,7 +80,7 @@ jobs:
       ImageOS: ubuntu24
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29']
 
     steps:
 
@@ -128,7 +128,7 @@ jobs:
       ImageOS: ubuntu24
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29']
 
     steps:
 
@@ -202,7 +202,7 @@ jobs:
       ImageOS: ubuntu24
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29']
         backend: [agnostic, extauth, ldap, mnesia, mysql, pgsql, redis, sqlite]
         schema: [single, multi]
         exclude:
@@ -315,7 +315,7 @@ jobs:
       ImageOS: ubuntu24
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29']
 
     steps:
 
