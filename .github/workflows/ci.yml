@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29.0-rc3']
 
     steps:
 
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29.0-rc3']
 
     steps:
 
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29.0-rc3']
 
     steps:
 
@@ -193,7 +193,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29.0-rc3']
         backend: [agnostic, extauth, ldap, mnesia, mysql, pgsql, redis, sqlite]
         schema: [single, multi]
         exclude:
@@ -304,7 +304,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
-        otp: ['28']
+        otp: ['29.0-rc3']
 
     steps:
 
