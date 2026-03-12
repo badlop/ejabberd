@@ -63,12 +63,17 @@ depends(_Host, _Opts) ->
 
 -spec stream_feature_register([xmpp_element()], binary()) -> [xmpp_element()].
 stream_feature_register(Acc, Host) ->
-    case {mod_register_opt:access(Host),
-	  mod_register_opt:ip_access(Host),
-	  mod_register_opt:redirect_url(Host)} of
-	{none, _, undefined} -> Acc;
-	{_, none, undefined} -> Acc;
-	{_, _, _} -> [#feature_register{}|Acc]
+    Access = mod_register_opt:access(Host),
+    Ip = mod_register_opt:ip_access(Host),
+    Url = mod_register_opt:redirect_url(Host),
+    AllowMods = mod_register_opt:allow_modules(Host),
+    maybe
+        false ?= (Url == undefined) and (Access == none),
+        false ?= (Url == undefined) and (Ip == none),
+        true ?= (AllowMods == all) orelse lists:member(?MODULE, AllowMods),
+        [#feature_register{}|Acc]
+    else
+        _ -> Acc
     end.
 
 c2s_unauthenticated_packet(#{ip := IP, server := Server} = State,
