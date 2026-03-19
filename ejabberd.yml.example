@@ -16,6 +16,44 @@
 
 hosts:
   - localhost
+  - atenea
+  - tercero
+  - cuarto
+
+oauth_access: all
+oauth_expire: 36000
+
+# Nuevo comando: mnesia2sql localhost
+# Internamente llama a: export2sql Host File, y luego a import2dwl Host File
+
+sql_schema_multihost: true
+#default_ram_db: sql
+#default_db: sql
+
+host_config:
+  atenea:
+    auth_method: sql
+    default_db: sql
+    sql_type: sqlite
+    sql_database: "@DATABASE_PATH@/sqlite/@HOST@.sqlite"
+  tercero:
+    auth_method: sql
+    default_db: sql
+    sql_type: pgsql
+    sql_port: 5432
+    sql_server: "pgsql"
+    sql_database: "ejabberd_test"
+    sql_username: "ejabberd_test"
+    sql_password: "ejabberd_test"
+  cuarto:
+    auth_method: sql
+    default_db: sql
+    sql_type: mysql
+    sql_port: 3306
+    sql_server: "mysql"
+    sql_database: "ejabberd_test"
+    sql_username: "ejabberd_test"
+    sql_password: "ejabberd_test"
 
 loglevel: info
 
