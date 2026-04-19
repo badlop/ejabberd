@@ -318,6 +318,7 @@ process_iq_get(#iq{to = To, from = From,
 run_roster_get_hook(LUser, LServer) ->
     ejabberd_hooks:run_fold(roster_get, LServer, [], [{LUser, LServer}]).
 
+%% TODO Ojo, que esto elimina de la respuesta algunos roster items
 -spec get_filtered_roster(binary(), binary()) -> [#roster{}].
 get_filtered_roster(LUser, LServer) ->
     lists:filter(
