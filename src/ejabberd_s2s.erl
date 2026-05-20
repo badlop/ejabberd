@@ -127,9 +127,7 @@ have_connection(FromTo) ->
 get_connections_pids(FromTo) ->
     try mnesia:dirty_read(s2s, FromTo) of
 	L when is_list(L) ->
-	    [Connection#s2s.pid || Connection <- L];
-	_ ->
-	    []
+	    [Connection#s2s.pid || Connection <- L]
     catch
         _:_ ->
             []
