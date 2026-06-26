@@ -38,6 +38,7 @@
 -include_lib("xmpp/include/xmpp.hrl").
 -include("ejabberd_sql_pt.hrl").
 -include("translate.hrl").
+-include("logger.hrl").
 
 -export([init/3, terminate/2, options/0, features/0,
     create_node_permission/6, create_node/2, delete_node/1, purge_node/2,
@@ -253,28 +254,25 @@ publish_item(Nidx, Publisher, PublishModel, MaxItems, ItemId, Payload,
 		    Now = erlang:timestamp(),
 		    case get_item(Nidx, ItemId) of
 			{result, #pubsub_item{creation = {_, GenKey}} = OldItem} ->
-			    set_item(OldItem#pubsub_item{
+			    set_item_with_res(OldItem#pubsub_item{
 					modification = {Now, SubKey},
-					payload = Payload}),
-			    {result, {default, broadcast, []}};
+					payload = Payload});
 			% Allow node owner to modify any item, he can also delete it and recreate
 			{result, #pubsub_item{creation = {CreationTime, _}} = OldItem} when Affiliation == owner->
-			    set_item(OldItem#pubsub_item{
+			    set_item_with_res(OldItem#pubsub_item{
 				creation = {CreationTime, GenKey},
 				modification = {Now, SubKey},
-				payload = Payload}),
-			    {result, {default, broadcast, []}};
+				payload = Payload});
 			{result, _} ->
 			    {error, xmpp:err_forbidden()};
 			_ ->
 			    OldIds = maybe_remove_extra_items(Nidx, MaxItems,
 							      GenKey, ItemId),
-			    set_item(#pubsub_item{
+			    set_item_with_res(OldIds, #pubsub_item{
 					itemid = {ItemId, Nidx},
 					creation = {Now, GenKey},
 					modification = {Now, SubKey},
-					payload = Payload}),
-			    {result, {default, broadcast, OldIds}}
+					payload = Payload})
 		    end;
 		true ->
 		    {result, {default, broadcast, []}}
@@ -838,6 +836,13 @@ get_item(Nidx, ItemId, JID, AccessModel, PresenceSubscription, RosterGroup, _Sub
     end.
 
 set_item(Item) ->
+    set_item_with_res(Item),
+    ok.
+
+set_item_with_res(Item) ->
+    set_item_with_res([], Item).
+
+set_item_with_res(OldIds, Item) ->
     {ItemId, Nidx} = Item#pubsub_item.itemid,
     {C, _} = Item#pubsub_item.creation,
     {M, JID} = Item#pubsub_item.modification,
@@ -846,7 +851,8 @@ set_item(Item) ->
     XML = str:join([fxml:element_to_binary(X) || X<-Payload], <<>>),
     SM = encode_now(M),
     SC = encode_now(C),
-    ?SQL_UPSERT_T(
+    %% try throw({aborted, <<"Data toooo long">>}) of
+    try ?SQL_UPSERT_T(
        "pubsub_item",
        ["!nodeid=%(Nidx)d",
         "!itemid=%(ItemId)s",
@@ -854,8 +860,17 @@ set_item(Item) ->
         "modification=%(SM)s",
         "payload=%(XML)s",
         "-creation=%(SC)s"
-       ]),
-    ok.
+       ]) of
+        _ ->
+            {result, {default, broadcast, OldIds}}
+    catch
+        E1:E2 ->
+            ?WARNING_MSG("ERROR when setting item in node_flat_sql"
+                         "~n  :: Error: ~p~n  :: Account: ~p~n  :: ItemId: ~p"
+                         "~n  :: Modification: ~p~n  :: Payload Size: ~p",
+                         [{E1, E2}, P, ItemId, SM, size(XML) ]),
+            {error, xmpp:err_forbidden()}
+    end.
 
 del_item(Nidx, ItemId) ->
     catch ejabberd_sql:sql_query_t(
