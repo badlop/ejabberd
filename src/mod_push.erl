@@ -561,6 +561,8 @@ is_incoming_chat_msg(_Stanza) ->
 		    xdata()) -> {ok, push_session()} | {error, err_reason()}.
 store_session(LUser, LServer, ID, PushJID, Node, XData) ->
     Mod = gen_mod:db_mod(LServer, ?MODULE),
+    ?WARNING_MSG("~n  ~p - ~p~n  account: ~s@~s~n  pushjid: ~p~n  node: ~s",
+                 [?MODULE, ?FUNCTION_NAME, LUser, LServer, PushJID, Node ]),
     delete_session(LUser, LServer, PushJID, Node),
     case use_cache(Mod, LServer) of
 	true ->

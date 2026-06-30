@@ -53,6 +53,8 @@ store_session(LUser, LServer, TS, PushJID, Node, XData) ->
     MaxSessions = ejabberd_sm:get_max_user_sessions(LUser, LServer),
     F = fun() ->
 		enforce_max_sessions(US, MaxSessions),
+                ?WARNING_MSG("~n  ~p - ~p~n  account: ~s@~s~n  ts: ~p~n  pushjid: ~p~n  node: ~s",
+                               [?MODULE, ?FUNCTION_NAME, LUser, LServer, TS, PushJID, Node ]),
 		mnesia:write(#push_session{us = US,
 					   timestamp = TS,
 					   service = PushLJID,
@@ -78,6 +80,9 @@ lookup_session(LUser, LServer, PushJID, Node) ->
 			     N == Node ->
 			  Rec
 		  end),
+    Records = mnesia:dirty_select(push_session, MatchSpec),
+    ?WARNING_MSG("~n  ~p - ~p~n  account: ~s@~s~n  pushjid: ~p~n  node: ~s~n  records: ~p",
+                 [?MODULE, ?FUNCTION_NAME, LUser, LServer, PushJID, Node, Records]),
     case mnesia:dirty_select(push_session, MatchSpec) of
 	[#push_session{timestamp = TS, xml = El}] ->
 	    {ok, {TS, PushLJID, Node, decode_xdata(El)}};
@@ -139,6 +144,8 @@ delete_session(LUser, LServer, TS) ->
 		  end),
     F = fun() ->
 		Recs = mnesia:select(push_session, MatchSpec),
+                ?WARNING_MSG("~n  ~p - ~p~n  account: ~s@~s~n  timestamp: ~p~n  Recs: ~p",
+                             [?MODULE, ?FUNCTION_NAME, LUser, LServer, TS, Recs ]),
 		lists:foreach(fun mnesia:delete_object/1, Recs)
 	end,
     case mnesia:transaction(F) of
@@ -152,6 +159,8 @@ delete_session(LUser, LServer, TS) ->
 
 delete_old_sessions(_LServer, Time) ->
     DelIfOld = fun(#push_session{timestamp = T} = Rec, ok) when T < Time ->
+                       ?WARNING_MSG("~n  ~p - ~p~n  Time: ~p~n  Rec: ~p",
+                                    [?MODULE, ?FUNCTION_NAME, Time, Rec]),
 		       mnesia:delete_object(Rec);
 		  (_Rec, ok) ->
 		       ok
@@ -188,6 +197,8 @@ enforce_max_sessions({U, S} = US, MaxSessions) ->
 			       end, Recs),
 	    OldRecs = lists:nthtail(MaxSessions - 1, Recs1),
 	    ?INFO_MSG("Disabling old push session(s) of ~ts@~ts", [U, S]),
+            ?WARNING_MSG("~n  ~p - ~p~n  account: ~s@~s~n  OldRecs: ~p",
+                         [?MODULE, ?FUNCTION_NAME, U, S, OldRecs]),
 	    lists:foreach(fun(Rec) -> mnesia:delete_object(Rec) end, OldRecs);
 	_ ->
 	    ok
