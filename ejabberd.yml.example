@@ -65,6 +65,7 @@ listen:
     module: ejabberd_http
     request_handlers:
       /admin: ejabberd_web_admin
+      /ws: ejabberd_http_ws
       /.well-known/acme-challenge: ejabberd_acme
   -
     port: 5478
