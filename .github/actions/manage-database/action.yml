@@ -30,9 +30,9 @@ runs:
       shell: sh
       run: |
         sudo sed -i 's/yes/no/g' /etc/initramfs-tools/update-initramfs.conf
-        sudo rm -f /var/lib/man-db/auto-update || echo ok
-        sudo apt-get -q update
-        sudo apt-get -q -y install postgresql
+        which psql && psql  --version || exit 1
+        sudo systemctl start postgresql.service
+        which psql && psql  --version || exit 1
 
     - if: contains(inputs.for, 'redis') && contains(inputs.do, 'install')
       shell: sh
