@@ -505,8 +505,9 @@ request_certificate(Arg) ->
 	      [_|_] = Domains ->
 		  case lists:dropwhile(
 			 fun(D) ->
-				 try ejabberd_router:is_my_route(D) of
-				     true -> not is_ip_or_localhost(D);
+				 Alias = ejabberd_config:resolve_host_alias(D),
+				 try ejabberd_router:is_my_route(Alias) of
+				     true -> not is_ip_or_localhost(Alias);
 				     false -> false
 				 catch _:{invalid_domain, _} -> false
 				 end
@@ -588,7 +589,8 @@ webadmin_page_node(Acc, _, _) -> Acc.
 %%%===================================================================
 -spec all_domains() -> [binary(),...].
 all_domains() ->
-    ejabberd_option:hosts() ++ ejabberd_router:get_all_routes().
+    Aliases = [Alias || {Alias, _Real} <- ejabberd_option:hosts_alias()],
+    ejabberd_option:hosts() ++ ejabberd_router:get_all_routes() ++ Aliases.
 
 -spec auto_domains() -> [binary()].
 auto_domains() ->
