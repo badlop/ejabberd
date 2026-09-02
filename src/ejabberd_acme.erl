@@ -505,8 +505,9 @@ request_certificate(Arg) ->
 	      [_|_] = Domains ->
 		  case lists:dropwhile(
 			 fun(D) ->
-				 try ejabberd_router:is_my_route(D) of
-				     true -> not is_ip_or_localhost(D);
+				 Alias = ejabberd_config:resolve_host_alias(D),
+				 try ejabberd_router:is_my_route(Alias) of
+				     true -> not is_ip_or_localhost(Alias);
 				     false -> false
 				 catch _:{invalid_domain, _} -> false
 				 end
