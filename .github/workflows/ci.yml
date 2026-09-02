@@ -203,7 +203,7 @@ jobs:
     strategy:
       matrix:
         otp: ['29']
-        backend: [agnostic, mnesia, mysql, pgsql]
+        backend: [mysql, pgsql, redis]
         schema: [single, multi]
         exclude:
         - backend: agnostic

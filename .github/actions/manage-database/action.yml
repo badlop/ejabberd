@@ -29,9 +29,6 @@ runs:
     - if: contains(inputs.for, 'pgsql') && contains(inputs.do, 'install')
       shell: sh
       run: |
-        sudo sed -i 's/yes/no/g' /etc/initramfs-tools/update-initramfs.conf
-        which psql && psql  --version || exit 1
-        sudo systemctl start postgresql.service
         which psql && psql  --version || exit 1
 
     - if: contains(inputs.for, 'redis') && contains(inputs.do, 'install')
