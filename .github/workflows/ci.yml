@@ -201,6 +201,7 @@ jobs:
     env:
       ImageOS: ubuntu24
     strategy:
+      fail-fast: false
       matrix:
         otp: ['29']
         backend: [agnostic, extauth, ldap, mnesia, mysql, pgsql, redis, sqlite]
