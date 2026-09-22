@@ -94,8 +94,11 @@ depends(_Host, _Opts) ->
 tokenize(Node) -> str:tokens(Node, <<"/#">>).
 
 acl_match_rule(Host, From) ->
-    Access = mod_configure_opt:access(Host),
-    acl:match_rule(Host, Access, From).
+    acl_match_rule(Host, Host, From).
+
+acl_match_rule(HostOption, HostACL, From) ->
+    Access = mod_configure_opt:access(HostOption),
+    acl:match_rule(HostACL, Access, From).
 
 -spec get_sm_identity([identity()], jid(), jid(), binary(), binary()) -> [identity()].
 get_sm_identity(Acc, _From, _To, Node, Lang) ->
@@ -401,8 +404,7 @@ recursively_get_local_items(PermLev, LServer, Node,
 
 -spec get_permission_level(jid(), binary()) -> global | vhost.
 get_permission_level(JID, Host) ->
-    Access = mod_configure_opt:access(Host),
-    case acl:match_rule(global, Access, JID) of
+    case acl_match_rule(Host, global, JID) of
       allow -> global;
       deny -> vhost
     end.
