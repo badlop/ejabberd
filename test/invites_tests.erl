@@ -1257,5 +1257,5 @@ re_escape(<<C:1/binary, Tail/binary>>, Acc) ->
     end.
 
 slow_down(Res) ->
-    timer:sleep(1),
+    timer:sleep(2),
     Res.
