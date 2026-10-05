@@ -38,8 +38,7 @@
          term_to_id/1, id_to_term/1]).
 
 %% Internal commands
--export([webadmin_host_last_activity/3,
-         webadmin_node_db_table_page/3]).
+-export([webadmin_host_last_activity/3]).
 
 -deprecated({make_menu_system, 4}).
 
@@ -1144,8 +1143,7 @@ search_running_node(SNode, [Node | Nodes]) ->
 
 get_node(global, Node, [], #request{lang = Lang}) ->
     Base = get_base_path(global, Node, 2),
-    BaseItems = [{<<"db">>, <<"Mnesia Tables">>},
-                 {<<"backup">>, <<"Mnesia Backup">>}],
+    BaseItems = [],
     MenuItems = make_menu_items(global, Node, Base, Lang, BaseItems),
     [?XC(<<"h1">>,
 	 (str:translate_and_format(Lang, ?T("Node ~p"), [Node])))]
@@ -1157,72 +1155,6 @@ get_node(Host, Node, [], #request{lang = Lang}) ->
     [?XC(<<"h1">>, (str:translate_and_format(Lang, ?T("Node ~p"), [Node]))),
      ?XE(<<"ul">>, MenuItems2)];
 
-get_node(global, Node, [<<"db">> | RPath], R) ->
-    PageTitle = <<"Mnesia Tables">>,
-    Title = ?XC(<<"h1">>, PageTitle),
-    Level = length(RPath),
-    [Title, ?BR | webadmin_db(Node, RPath, R, Level)];
-
-get_node(global, Node, [<<"backup">>], #request{lang = Lang} = R) ->
-    Types = [{<<"#binary">>, <<"Binary">>},
-             {<<"#plaintext">>, <<"Plain Text">>},
-             {<<"#piefxis">>, <<"PIEXFIS (XEP-0227)">>},
-             {<<"#sql">>, <<"SQL">>},
-             {<<"#prosody">>, <<"Prosody">>},
-             {<<"#jabberd14">>, <<"jabberd 1.4">>}],
-
-    [?XC(<<"h1">>, (str:translate_and_format(Lang, ?T("Backup of ~p"), [Node]))),
-     ?XCT(<<"p">>,
-          ?T("Please note that these options will "
-             "only backup the builtin Mnesia database. "
-             "If you are using the ODBC module, you "
-             "also need to backup your SQL database "
-             "separately.")),
-     ?XE(<<"ul">>, [?LI([?AC(MIU, MIN)]) || {MIU, MIN} <- Types]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"binary">>}], <<"Binary">>),
-     ?XCT(<<"p">>, ?T("Store binary backup:")),
-     ?XE(<<"blockquote">>, [make_command(backup, R)]),
-     ?XCT(<<"p">>, ?T("Restore binary backup immediately:")),
-     ?XE(<<"blockquote">>, [make_command(restore, R, [], [{style, danger}])]),
-     ?XCT(<<"p">>, ?T("Restore binary backup after next ejabberd "
-                      "restart (requires less memory):")),
-     ?XE(<<"blockquote">>, [make_command(install_fallback, R, [], [{style, danger}])]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"plaintext">>}], <<"Plain Text">>),
-     ?XCT(<<"p">>, ?T("Store plain text backup:")),
-     ?XE(<<"blockquote">>, [make_command(dump, R)]),
-     ?XCT(<<"p">>, ?T("Restore plain text backup immediately:")),
-     ?XE(<<"blockquote">>, [make_command(load, R, [], [{style, danger}])]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"piefxis">>}], <<"PIEFXIS (XEP-0227)">>),
-     ?XCT(<<"p">>, ?T("Import users data from a PIEFXIS file (XEP-0227):")),
-     ?XE(<<"blockquote">>, [make_command(import_piefxis, R)]),
-     ?XCT(<<"p">>, ?T("Export data of all users in the server to PIEFXIS files (XEP-0227):")),
-     ?XE(<<"blockquote">>, [make_command(export_piefxis, R)]),
-     ?XCT(<<"p">>, ?T("Export data of users in a host to PIEFXIS files (XEP-0227):")),
-     ?XE(<<"blockquote">>, [make_command(export_piefxis_host, R)]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"sql">>}], <<"SQL">>),
-     ?XCT(<<"p">>, ?T("Export all tables as SQL queries to a file:")),
-     ?XE(<<"blockquote">>, [make_command(export2sql, R)]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"prosody">>}], <<"Prosody">>),
-     ?XCT(<<"p">>, <<"Import data from Prosody:">>),
-     ?XE(<<"blockquote">>, [make_command(import_prosody, R)]),
-
-     ?X(<<"hr">>),
-     ?XAC(<<"h2">>, [{<<"id">>, <<"jabberd14">>}], <<"jabberd 1.4">>),
-     ?XCT(<<"p">>, ?T("Import user data from jabberd14 spool file:")),
-     ?XE(<<"blockquote">>, [make_command(import_file, R)]),
-     ?XCT(<<"p">>, ?T("Import users data from jabberd14 spool directory:")),
-     ?XE(<<"blockquote">>, [make_command(import_dir, R)])
-    ];
 get_node(Host, Node, _NPath, Request) ->
     Res = case Host of
 	      global ->
@@ -1321,162 +1253,6 @@ pretty_string_int(String) when is_binary(String) ->
     Result.
 
 %%%==================================
-%%%% mnesia table view
-
-webadmin_node_db_table_page(Node, STable, PageNumber) ->
-    try binary_to_existing_atom(STable, utf8) of
-	Table ->
-	    TInfo = ejabberd_cluster:call(Node, mnesia, table_info, [Table, all]),
-	    {value, {storage_type, Type}} = lists:keysearch(storage_type, 1, TInfo),
-	    {value, {size, Size}} = lists:keysearch(size, 1, TInfo),
-	    PageSize = 500,
-	    TableContentErl = get_table_content(Node, Table, Type, PageNumber, PageSize),
-	    TableContent = str:format("~p", [TableContentErl]),
-	    PagesLinks = build_elements_pages_list(Size, PageNumber, PageSize),
-	    [?P] ++ PagesLinks ++ [?XC(<<"pre">>, TableContent)]
-    catch
-	error:badarg -> []
-    end.
-
-build_elements_pages_list(Size, PageNumber, PageSize) ->
-    PagesNumber = calculate_pages_number(Size, PageSize),
-    PagesSeq = lists:seq(1, PagesNumber),
-    PagesList = [?AC(<<"../", (integer_to_binary(N))/binary, "/">>,
-         <<(integer_to_binary(N))/binary, " ">>)
-     || N <- PagesSeq],
-    lists:keyreplace(
-        [?C(<<(integer_to_binary(PageNumber))/binary, " ">>)],
-        4,
-        PagesList,
-        ?C(<<" [", (integer_to_binary(PageNumber))/binary, "] ">>)).
-
-calculate_pages_number(Size, PageSize) ->
-    Remainder = case Size rem PageSize of
-                   0 -> 0;
-                   _ -> 1
-               end,
-    case (Size div PageSize) + Remainder of
-        1 -> 0;
-        Res -> Res
-    end.
-
-get_table_content(Node, Table, _Type, PageNumber, PageSize) ->
-    Keys1 = lists:sort(ejabberd_cluster:call(Node, mnesia, dirty_all_keys, [Table])),
-    FirstKeyPos = 1 - PageSize + PageNumber*PageSize,
-    Keys = lists:sublist(Keys1, FirstKeyPos, PageSize),
-    Res = [ejabberd_cluster:call(Node, mnesia, dirty_read, [Table, Key])
-           || Key <- Keys],
-    lists:flatten(Res).
-
-%% @format-begin
-
-webadmin_db(Node, [<<"table">>, TableName, <<"details">> | RPath], R, Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb =
-        make_breadcrumb({table_section, Level, Service, TableName, <<"Details">>, RPath}),
-    Get = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [mnesia_table_details, R, [{<<"table">>, TableName}], []])],
-    Breadcrumb ++ Get;
-webadmin_db(Node,
-            [<<"table">>, TableName, <<"elements">>, PageNumber | RPath],
-            R,
-            Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb =
-        make_breadcrumb({table_section, Level, Service, TableName, <<"Elements">>, RPath}),
-    Get = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [webadmin_node_db_table_page,
-                                  R,
-                                  [{<<"node">>, Node},
-                                   {<<"table">>, TableName},
-                                   {<<"page">>, PageNumber}],
-                                  []])],
-    Breadcrumb ++ Get;
-webadmin_db(Node, [<<"table">>, TableName, <<"change-storage">> | RPath], R, Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb =
-        make_breadcrumb({table_section, Level, Service, TableName, <<"Change Storage">>, RPath}),
-    Set = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [mnesia_table_change_storage, R, [{<<"table">>, TableName}], []])],
-    Breadcrumb ++ Set;
-webadmin_db(Node, [<<"table">>, TableName, <<"clear">> | RPath], R, Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb =
-        make_breadcrumb({table_section, Level, Service, TableName, <<"Clear Content">>, RPath}),
-    Set = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [mnesia_table_clear,
-                                  R,
-                                  [{<<"table">>, TableName}],
-                                  [{style, danger}]])],
-    Breadcrumb ++ Set;
-webadmin_db(Node, [<<"table">>, TableName, <<"destroy">> | RPath], R, Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb =
-        make_breadcrumb({table_section, Level, Service, TableName, <<"Destroy Table">>, RPath}),
-    Set = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [mnesia_table_destroy,
-                                  R,
-                                  [{<<"table">>, TableName}],
-                                  [{style, danger}]])],
-    Breadcrumb ++ Set;
-webadmin_db(_Node, [<<"table">>, TableName | _RPath], _R, Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb = make_breadcrumb({table, Level, Service, TableName}),
-    MenuItems =
-        [{<<"details/">>, <<"Details">>},
-         {<<"elements/1/">>, <<"Elements">>},
-         {<<"change-storage/">>, <<"Change Storage">>},
-         {<<"clear/">>, <<"Clear Content">>},
-         {<<"destroy/">>, <<"Destroy Table">>}],
-    Get = [?XE(<<"ul">>, [?LI([?AC(MIU, MIN)]) || {MIU, MIN} <- MenuItems])],
-    Breadcrumb ++ Get;
-webadmin_db(Node, _RPath, R, _Level) ->
-    Service = <<"Mnesia Tables">>,
-    Breadcrumb = make_breadcrumb({service, Service}),
-    Get = [ejabberd_cluster:call(Node,
-                                 ejabberd_web_admin,
-                                 make_command,
-                                 [mnesia_list_tables,
-                                  R,
-                                  [],
-                                  [{result_links, [{name, mnesia_table, 3, <<"">>}]}]])],
-    Breadcrumb ++ Get.
-
-make_breadcrumb({service, Service}) ->
-    make_breadcrumb([Service]);
-make_breadcrumb({table, Level, Service, Name}) ->
-    make_breadcrumb([{Level, Service}, separator, Name]);
-make_breadcrumb({table_section, Level, Service, Name, Section, RPath}) ->
-    make_breadcrumb([{Level, Service}, separator, {Level - 2, Name}, separator, Section
-                     | RPath]);
-make_breadcrumb(Elements) ->
-    lists:map(fun ({xmlel, _, _, _} = Xmlel) ->
-                      Xmlel;
-                  (<<"sort">>) ->
-                      ?C(<<" +">>);
-                  (<<"page">>) ->
-                      ?C(<<" #">>);
-                  (separator) ->
-                      ?C(<<" > ">>);
-                  (Bin) when is_binary(Bin) ->
-                      ?C(Bin);
-                  ({Level, Bin}) when is_integer(Level) and is_binary(Bin) ->
-                      ?AC(binary:copy(<<"../">>, Level), Bin)
-              end,
-              Elements).
-%% @format-end
-
-%%%==================================
 %%%% navigation menu
 
 make_navigation(Host, Node, Username, Lang, JID, Level) ->
@@ -1556,9 +1332,7 @@ make_node_menu(_Host, cluster, _Lang, _Level) ->
     {<<"">>, <<"">>, []};
 make_node_menu(global, Node, Lang, Level) ->
     NodeBase = get_base_path(global, Node, Level),
-    NodeFixed = [{<<"db">>, <<"Mnesia Tables">>},
-		 {<<"backup">>, <<"Mnesia Backup">>}]
-		  ++ get_menu_items_hook({node, Node}, Lang),
+    NodeFixed = get_menu_items_hook({node, Node}, Lang),
     {NodeBase, iolist_to_binary(atom_to_list(Node)),
      lists:keysort(2, NodeFixed)};
 make_node_menu(_Host, _Node, _Lang, _Level) ->
@@ -1780,6 +1554,7 @@ make_command(Name, Request) ->
              {force_execution, boolean()} |
              {table_options, {PageSize :: integer(), RemainingPath :: [binary()]}} |
              {action_table, Actions :: [any()]} |
+             {header_texts, [any()]} |
              {result_named, boolean()} |
              {result_links,
               [{ResultName :: atom(),
@@ -1850,6 +1625,7 @@ caller_info(Request) ->
              {force_execution, boolean()} |
              {table_options, {PageSize :: integer(), RemainingPath :: [binary()]}} |
              {action_table, Actions :: [any()]} |
+             {header_texts, [any()]} |
              {result_named, boolean()} |
              {result_links,
               [{ResultName :: atom(),
@@ -1876,9 +1652,11 @@ make_command_allowed(Name, Request, BaseArguments, Options, Cmd) ->
     TO = proplists:get_value(table_options, Options, {999999, []}),
     Actions = proplists:get_value(action_table, Options, []),
     Style = proplists:get_value(style, Options, normal),
+    HeaderTexts = proplists:get_value(header_texts, Options, []),
     {ArgumentsFormat, _Rename, ResultFormatApi} = ejabberd_commands:get_command_format(Name),
+    ResultFormatApi2 = rename_header_texts(ResultFormatApi, HeaderTexts),
     Method =
-        case {ForceExecution, ResultFormatApi} of
+        case {ForceExecution, ResultFormatApi2} of
             {true, _} ->
                 auto;
             {false, _} ->
@@ -1927,10 +1705,10 @@ make_command_allowed(Name, Request, BaseArguments, Options, Cmd) ->
                    lists:map(fun({A, _}) -> A end, ArgumentsFormat), ArgumentsUsed1)),
     ResultEls =
         make_command_result(filter_results(get_filters_from_query(Query,
-                                                                  get_result_fields(ResultFormatApi)),
+                                                                  get_result_fields(ResultFormatApi2)),
                                            ExecRes),
                             ArgumentsUsed,
-                            ResultFormatApi,
+                            ResultFormatApi2,
                             Automated,
                             Resultnamed,
                             ResultLinks,
@@ -1939,6 +1717,20 @@ make_command_allowed(Name, Request, BaseArguments, Options, Cmd) ->
                             Actions,
                             Request),
     format_result(Only, ExecRes, PresentationEls, ArgumentsEls, ResultEls).
+
+rename_header_texts({contents, {list, {content, {tuple, Elements}}}}, HeaderTexts) ->
+    Elements2 =
+        try
+            lists:zipwith(fun({_, string}, HeaderName) -> {HeaderName, string} end,
+                          Elements,
+                          HeaderTexts)
+        catch
+            error:function_clause ->
+                Elements
+        end,
+    {contents, {list, {content, {tuple, Elements2}}}};
+rename_header_texts(ResultFormatApi, _HeaderTexts) ->
+    ResultFormatApi.
 
 get_result_fields({_, {list, {_, {tuple, Fields}}}}) ->
     Fields;
@@ -2536,13 +2328,50 @@ make_result(Binary,
                              [{node, Node}, {tablename, Binary}],
                              Level),
     ?AC(UrlBinary, Binary);
+make_result(Binary,
+            ElementName,
+            ArgumentsUsed,
+            [{ResultName, sql_table, Level, Append} | _])
+    when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    Host = proplists:get_value(host, ArgumentsUsed),
+    UrlBinary =
+        replace_url_elements([<<"server/">>, host, <<"/sql/table/">>, tablename, <<"/">>, Append],
+                             [{host, Host}, {tablename, Binary}],
+                             Level),
+    ?AC(UrlBinary, Binary);
 make_result(Binary, ElementName, _ArgumentsUsed, [{ResultName, node, Level, Append} | _])
     when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
     UrlBinary =
         replace_url_elements([<<"node/">>, node, <<"/">>, Append], [{node, Binary}], Level),
     ?AC(UrlBinary, Binary);
-make_result(Binary, ElementName, _ArgumentsUsed, [{ResultName, user, Level, Append} | _])
+make_result(Binary1, ElementName, _ArgumentsUsed, [{ResultName, user, Level, Append} | _])
     when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    %% TODO: Poner esto como un frontend a cualquier otro tipo de resultado: user, mucroom, ...
+    Binary =
+        try
+            {ok, SS, _} = erl_scan:string(binary_to_list(<<Binary1/binary, ".">>)),
+            {ok, SSS} = erl_parse:parse_term(SS),
+            case SSS of
+                #jid{luser = Username1,
+                     lserver = Host1,
+                     lresource = <<>>} ->
+                    <<Username1/binary, "@", Host1/binary>>;
+                #jid{luser = Username1,
+                     lserver = Host1,
+                     lresource = Resource1} ->
+                    <<Username1/binary, "@", Host1/binary, "/", Resource1/binary>>;
+                {Username1, Host1} ->
+                    <<Username1/binary, "@", Host1/binary>>;
+                {Username1, Host1, <<>>} ->
+                    <<Username1/binary, "@", Host1/binary>>;
+                {Username1, Host1, Resource1} ->
+                    <<Username1/binary, "@", Host1/binary, "/", Resource1/binary>>
+            end
+        catch
+            _:_ ->
+                Binary1
+        end,
+
     Jid = try jid:decode(Binary) of
               #jid{} = J ->
                   J
@@ -2580,8 +2409,26 @@ make_result(Binary,
                                      Level),
             ?AC(UrlBinary, Binary)
     end;
-make_result(Binary, ElementName, _ArgumentsUsed, [{ResultName, room, Level, Append} | _])
+make_result(Binary1, ElementName, _ArgumentsUsed, [{ResultName, room, Level, Append} | _])
     when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    Binary =
+        try
+            {ok, SS, _} = erl_scan:string(binary_to_list(<<Binary1/binary, ".">>)),
+            {ok, SSS} = erl_parse:parse_term(SS),
+            case SSS of
+                #jid{luser = Roomname1,
+                     lserver = Host1,
+                     lresource = <<>>} ->
+                    <<Roomname1/binary, "@", Host1/binary>>;
+                {Roomname1, Host1} ->
+                    <<Roomname1/binary, "@", Host1/binary>>;
+                {Roomname1, Host1, <<>>} ->
+                    <<Roomname1/binary, "@", Host1/binary>>
+            end
+        catch
+            _:_ ->
+                Binary1
+        end,
     Jid = jid:decode(Binary),
     {Roomname, Service, _} = jid:split(Jid),
     Host = ejabberd_router:host_of_route(Service),
@@ -2654,6 +2501,73 @@ make_result(Binary,
             [{ResultName, paragraph, _Level, _Append} | _])
     when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
     ?XC(<<"pre">>, Binary);
+make_result(Binary,
+            ElementName,
+            _ArgumentsUsed,
+            [{ResultName, timestamp, _Level, _Append} | _])
+    when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    Value =
+        case Binary of
+            <<"{", _/binary>> = Binary1 when is_binary(Binary1) ->
+                {ok, B1, _} = erl_scan:string(binary_to_list(<<Binary1/binary, ".">>)),
+                {ok, B2} = erl_parse:parse_term(B1),
+                B2;
+            Binary1 when is_binary(Binary1) ->
+                binary_to_integer(Binary1) div 1000000;
+            [String1] when is_list(String1) ->
+                list_to_integer(String1) div 1000000
+        end,
+    Format =
+        fun({{Year, Month, Day}, {Hour, Minute, Second}}) ->
+           str:format("~w-~.2.0w-~.2.0wT~.2.0w:~.2.0w:~.2.0wZ",
+                      [Year, Month, Day, Hour, Minute, Second])
+        end,
+    Date =
+        case Value of
+            Atom when is_atom(Atom) ->
+                misc:atom_to_binary(Atom);
+            {{_, _, _}, {_, _, _}} ->
+                Format(Value);
+            Value when is_integer(Value) ->
+                %% calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
+                InitSeconds = 62167219200,
+                Format(calendar:gregorian_seconds_to_datetime(InitSeconds + Value));
+            _ ->
+                Format(calendar:now_to_universal_time(Value))
+        end,
+    ?XC(<<"pre">>, Date);
+make_result(<<"<", _/binary>> = Binary,
+            ElementName,
+            _ArgumentsUsed,
+            [{ResultName, xml_stanza, _Level, _Append} | _])
+    when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    {B3, _} = xmerl_scan:string(binary_to_list(Binary)),
+    [_, BinaryParsed] = xmerl:export_simple([B3], xmerl_xml_indent),
+    ?XC(<<"pre">>, BinaryParsed);
+make_result(Binary,
+            ElementName,
+            _ArgumentsUsed,
+            [{ResultName, xml_stanza, _Level, _Append} | _])
+    when (ElementName == ResultName) or (ElementName == unknown_element_name) ->
+    Binary2 =
+        case Binary of
+            <<"<", _/binary>> ->
+                Binary;
+            _ ->
+                {ok, B1, _} = erl_scan:string(binary_to_list(<<Binary/binary, ".">>)),
+                {ok, B2} = erl_parse:parse_term(B1),
+                B2El =
+                    case B2 of
+                        [{xmlel, _, _, _} = X] ->
+                            X;
+                        {xmlel, _, _, _} = X ->
+                            X
+                    end,
+                fxml:element_to_binary(B2El)
+        end,
+    {B3, _} = xmerl_scan:string(binary_to_list(Binary2)),
+    [_, BinaryParsed] = xmerl:export_simple([B3], xmerl_xml_indent),
+    ?XC(<<"pre">>, BinaryParsed);
 make_result([{xmlcdata, _, _, _} | _] = Any,
             _ElementName,
             _ArgumentsUsed,

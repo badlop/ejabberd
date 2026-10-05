@@ -55,7 +55,7 @@ defmodule Ejabberd.MixProject do
   defp dialyzer do
     [
       plt_add_apps: [
-        :mnesia, :odbc, :os_mon, :stdlib,
+        :mnesia, :odbc, :os_mon, :stdlib, :xmerl,
         :eredis, :luerl,
         :cache_tab, :eimp, :epam, :esip, :ezlib, :mqtree,
         :p1_acme, :p1_mysql, :p1_oauth2, :p1_pgsql, :pkix,
@@ -171,6 +171,7 @@ defmodule Ejabberd.MixProject do
     for {:true, app} <- [{config(:pam), :epam},
                          {config(:lua), :luerl},
                          {config(:redis), :eredis},
+                         {if_version_above(~c"26", true), :xmerl},
                          {Mix.env() == :edoc, :ex_doc},
                          {Mix.env() == :test, :dialyxir},
                          {config(:mysql), :p1_mysql},

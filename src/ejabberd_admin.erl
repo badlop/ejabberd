@@ -73,7 +73,7 @@
 	 mnesia_table_details/1,
 	 mnesia_table_change_storage/2,
 	 mnesia_table_clear/1,
-	 mnesia_table_delete/1,
+	 mnesia_table_destroy/1,
 	 echo/1, echo3/3]).
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -673,21 +673,6 @@ get_commands_spec() ->
 			desc = "Generate WebAdmin ejabberd-contrib HTML",
 			module = ext_mod, function = webadmin_node_contrib,
 			args = [{node, atom}, {query, any}, {lang, binary}],
-			result = {res, any}},
-     #ejabberd_commands{name = webadmin_node_db, tags = [internal],
-			desc = "Generate WebAdmin Mnesia database HTML",
-			module = ejabberd_web_admin, function = webadmin_node_db,
-			args = [{node, atom}, {query, any}, {lang, binary}],
-			result = {res, any}},
-     #ejabberd_commands{name = webadmin_node_db_table, tags = [internal],
-			desc = "Generate WebAdmin Mnesia database HTML for a table",
-			module = ejabberd_web_admin, function = webadmin_node_db_table,
-			args = [{node, atom}, {table, binary}, {lang, binary}],
-			result = {res, any}},
-     #ejabberd_commands{name = webadmin_node_db_table_page, tags = [internal],
-			desc = "Generate WebAdmin Mnesia database HTML for a table content",
-			module = ejabberd_web_admin, function = webadmin_node_db_table_page,
-			args = [{node, atom}, {table, binary}, {page, integer}],
 			result = {res, any}},
 
      #ejabberd_commands{name = mnesia_list_tables, tags = [mnesia],
@@ -1433,7 +1418,7 @@ mnesia_table_clear(STable) ->
     Table = binary_to_existing_atom(STable, latin1),
     mnesia:clear_table(Table).
 
-mnesia_table_delete(STable) ->
+mnesia_table_destroy(STable) ->
     Table = binary_to_existing_atom(STable, latin1),
     mnesia:delete_table(Table).
 

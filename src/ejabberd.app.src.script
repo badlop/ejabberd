@@ -40,7 +40,7 @@
   {registered, []},
   {applications, [kernel, sasl, ssl, stdlib, syntax_tools]},
   {included_applications,
-    [compiler, inets, mnesia, os_mon,
+    [compiler, inets, mnesia, os_mon, xmerl,
      cache_tab,
      eimp,
      fast_tls,

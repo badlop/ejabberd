@@ -243,6 +243,7 @@ modules:
   mod_vcard_xupdate: {}
   mod_version:
     show_os: false
+  mod_webadmin_dbrowser: {}
 
 ### Local Variables:
 ### mode: yaml
