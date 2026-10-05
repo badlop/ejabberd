@@ -61,6 +61,7 @@
     disco_local_identity/5, disco_local_features/5,
     disco_local_items/5, disco_sm_identity/5,
     disco_sm_features/5, disco_sm_items/5,
+    disco_info_xdata/5,
     c2s_handle_info/2]).
 
 %% exported iq handlers
@@ -335,6 +336,8 @@ init([ServerHost|_]) ->
 		?MODULE, disco_sm_features, 75),
 	    ejabberd_hooks:add(disco_sm_items, ServerHost,
 		?MODULE, disco_sm_items, 75),
+	    ejabberd_hooks:add(disco_info, ServerHost,
+		?MODULE, disco_info_xdata, 75),
 	    gen_iq_handler:add_iq_handler(ejabberd_sm, ServerHost,
 		?NS_PUBSUB, ?MODULE, iq_sm),
 	    gen_iq_handler:add_iq_handler(ejabberd_sm, ServerHost,
@@ -550,6 +553,23 @@ disco_items(Host, Node, From) ->
 	{result, {_, Result}} -> Result;
 	_ -> []
     end.
+
+-spec disco_info_xdata([xdata()], jid(), jid(), binary(), binary()) -> [xdata()].
+disco_info_xdata(Acc,
+                 #jid{luser = Username, lserver = Server} = From,
+                 #jid{luser = Username, lserver = Server},
+                 Node,
+                 _Lang) ->
+    HostPEP = {Username, Server, <<>>},
+    Res = case node_disco_info(HostPEP, Node, From, false, false) of
+               {result, #disco_info{xdata = XDataList}} ->
+                   XDataList;
+               _ ->
+                   []
+           end,
+    Res ++ Acc;
+disco_info_xdata(Acc, _From, _To, _Node, _Lang) ->
+    Acc.
 
 %% -------
 %% presence and session hooks handling functions
@@ -775,6 +795,8 @@ terminate(_Reason,
 		?MODULE, disco_sm_features, 75),
 	    ejabberd_hooks:delete(disco_sm_items, ServerHost,
 		?MODULE, disco_sm_items, 75),
+	    ejabberd_hooks:delete(disco_info, ServerHost,
+		?MODULE, disco_info_xdata, 75),
 	    gen_iq_handler:remove_iq_handler(ejabberd_sm,
 		ServerHost, ?NS_PUBSUB),
 	    gen_iq_handler:remove_iq_handler(ejabberd_sm,
@@ -947,7 +969,7 @@ command_disco_info(_Host, ?NS_PUBSUB_GET_PENDING, _From) ->
 node_disco_info(Host, Node, From) ->
     node_disco_info(Host, Node, From, true, true).
 
--spec node_disco_info(binary(), binary(), jid(), boolean(), boolean()) ->
+-spec node_disco_info(host(), binary(), jid(), boolean(), boolean()) ->
 			     {result, disco_info()} | {error, stanza_error()}.
 node_disco_info(Host, Node, _From, _Identity, _Features) ->
     Action =
